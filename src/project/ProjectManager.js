@@ -1311,9 +1311,6 @@ define(function (require, exports, module) {
      */
     renameItemInline = function (entry) {
         var d = new $.Deferred();
-        if (brackets.unsupportedInBrowser()) {
-            return d.reject().promise();
-        }
         
         model.startRename(entry)
             .done(function () {

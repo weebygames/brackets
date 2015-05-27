@@ -139,6 +139,7 @@ define(function (require, exports, module) {
         var f = fs.dir(path);
         f.mkdir(function(data, status) {
             if (status >= 300) {
+                // TODO: better error handling
                 callback(FileSystemError.UNKNOWN);
             } else {
                 stat(path, function (err, stat) {
@@ -151,8 +152,20 @@ define(function (require, exports, module) {
     function rename(oldPath, newPath, callback) {
         console.log("Rename file: " + oldPath + " -> " + newPath);
 
-        // FIXME
-        throw new Error();
+        _getFile(oldPath, function(f) {
+            if (typeof f === 'string') {
+                callback(f);
+            } else {
+                f.mv(newPath, function(data, status) {
+                    if (status >= 300) {
+                        // TODO: better error handling
+                        callback(FileSystemError.UNKNOWN);
+                    } else {
+                        callback(null, null);
+                    }
+                });
+            }
+        });
     }
 
     function readFile(path, options, callback) {
