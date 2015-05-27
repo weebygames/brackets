@@ -1080,9 +1080,6 @@ define(function (require, exports, module) {
      */
     function deleteItem(entry) {
         var result = new $.Deferred();
-        if (brackets.unsupportedInBrowser()) {
-            return result.reject().promise();
-        }
 
         entry.moveToTrash(function (err) {
             if (!err) {

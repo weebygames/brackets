@@ -215,8 +215,20 @@ define(function (require, exports, module) {
     function moveToTrash(path, callback) {
         console.log("Trash file: " + path);
 
-        // FIXME
-        throw new Error();
+        _getFile(path, function(f) {
+            if (typeof f === 'string') {
+                callback(f);
+            } else {
+                f.rm(function(data, status) {
+                    if (status >= 300) {
+                        // TODO: better error handling
+                        callback(FileSystemError.UNKNOWN);
+                    } else {
+                        callback();
+                    }
+                });
+            }
+        });
     }
 
     function initWatchers(changeCallback, offlineCallback) {

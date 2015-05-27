@@ -1525,10 +1525,6 @@ define(function (require, exports, module) {
 
     /** Delete file command handler  **/
     function handleFileDelete() {
-        if (brackets.unsupportedInBrowser()) {
-            return;
-        }
-        
         var entry = ProjectManager.getSelectedItem();
         if (entry.isDirectory) {
             Dialogs.showModalDialog(
