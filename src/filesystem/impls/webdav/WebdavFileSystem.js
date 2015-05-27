@@ -43,7 +43,6 @@ define(function (require, exports, module) {
     var fs = new WebDAV.Fs('http://webdav-' + window.location.host);
     WebDAV.useCredentials = true;
 
-
     function _startsWith(path, prefix) {
         return (path.substr(0, prefix.length) === prefix);
     }
