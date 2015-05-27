@@ -130,8 +130,22 @@ define(function (require, exports, module) {
     function mkdir(path, mode, callback) {
         console.log("Make directory: " + path + " [mode " + mode + "]");
 
-        // FIXME
-        throw new Error();
+        if (typeof mode === "function") {
+            callback = mode;
+            mode = parseInt("0755", 8);
+        }
+
+        // TODO: add support for setting the mode
+        var f = fs.dir(path);
+        f.mkdir(function(data, status) {
+            if (status >= 300) {
+                callback(FileSystemError.UNKNOWN);
+            } else {
+                stat(path, function (err, stat) {
+                    callback(err, stat);
+                });
+            }
+        });
     }
 
     function rename(oldPath, newPath, callback) {
@@ -169,8 +183,26 @@ define(function (require, exports, module) {
     function writeFile(path, data, options, callback) {
         console.log("Write file: " + path + " [length " + data.length + "]");
 
-        // FIXME
-        throw new Error();
+        // TODO: Make use of the options for verifying writes
+        _getFile(path, function(f) {
+            if (typeof f === 'string') {
+                callback(f);
+            } else {
+                f.write(data, function(data, status) {
+                    if (status >= 300) {
+                        // TODO: better error handling
+                        callback(FileSystemError.UNKNOWN);
+                    } else {
+                        // TODO: find out if the file was created or not
+                        var created = false;
+
+                        stat(path, function (err, stat) {
+                            callback(err, stat, created);
+                        });
+                    }
+                });
+            }
+        });
     }
 
     function unlink(path, callback) {
