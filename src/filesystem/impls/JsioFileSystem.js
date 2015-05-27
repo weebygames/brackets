@@ -40,15 +40,8 @@ define(function (require, exports, module) {
 //    var USER_EXTENSIONS_PREFIX = "/.brackets.user.extensions$/";
 //    var CONFIG_PREFIX = "/.$brackets.config$/";
 
-
-    // Static, hardcoded file tree structure to serve up. Key is entry name, and value is either:
-    //  - string = file
-    //  - object = nested folder containing more entries
-    var demoContent = {
-        "index.html": "<html>\n<head>\n    <title>Hello, world!</title>\n</head>\n<body>\n    Welcome to Brackets!\n</body>\n</html>",
-        "main.css": ".hello {\n    content: 'world!';\n}",
-        "main.js": "function sayHello() {\n    console.log('Hello, world!');\n}"
-    };
+    var fs = new WebDAV.Fs('http://webdav-' + window.location.host);
+    WebDAV.useCredentials = true;
 
 
     function _startsWith(path, prefix) {
@@ -64,6 +57,26 @@ define(function (require, exports, module) {
         return segments[segments.length - 1];
     }
 
+    function _makeStat(webdavFile) {
+        return {
+            isFile: webdavFile.type === 'file',
+            mtime: webdavFile.mtime,
+            hash: webdavFile.size * webdavFile.size * webdavFile.mtime.getTime(),
+            size: webdavFile.size
+        };
+    }
+
+    function _getFile(path, callback) {
+        var f = fs.file(path);
+
+        f.propfind(function(props) {
+            if (!f.exists) {
+                callback(FileSystemError.NOT_FOUND);
+            } else {
+                callback(f);
+            }
+        });
+    }
 
     function stat(path, callback) {
         if (_startsWith(path, CORE_EXTENSIONS_PREFIX)) {
@@ -71,13 +84,14 @@ define(function (require, exports, module) {
             return;
         }
 
-        throw new Error('implement stat /stat');
-        // var result = _getDemoData(path);
-        // if (result || result === "") {
-            // callback(null, _makeStat(result));
-        // } else {
-        //     callback(FileSystemError.NOT_FOUND);
-        // }
+        _getFile(path, function(f) {
+            if (typeof f === 'string') {
+                callback(f);
+            } else {
+                var stat = _makeStat(f);
+                callback(null, stat);
+            }
+        });
     }
 
     function exists(path, callback) {
@@ -96,20 +110,21 @@ define(function (require, exports, module) {
             return;
         }
 
-        throw new Error("implement readdir /getDir");
-        // var storeData = _getDemoData(path);
-        // if (!storeData) {
-        //     callback(FileSystemError.NOT_FOUND);
-        // } else if (typeof storeData === "string") {
-        //     callback(FileSystemError.INVALID_PARAMS);
-        // } else {
-            // var names = Object.keys(storeData);
-            // var stats = [];
-            // names.forEach(function (name) {
-            //     stats.push(_makeStat(storeData[name]));
-            // });
-            // callback(null, names, stats);
-        // }
+        _getFile(path, function(f) {
+            if (typeof f === 'string') {
+                callback(f);
+            } else {
+                f.children(function(children) {
+                    var names = [];
+                    var stats = [];
+                    children.forEach(function (child) {
+                        names.push(child.name);
+                        stats.push(_makeStat(child));
+                    });
+                    callback(null, names, stats);
+                });
+            }
+        });
     }
 
     function mkdir(path, mode, callback) {
@@ -138,16 +153,16 @@ define(function (require, exports, module) {
             return;
         }
 
-        // var storeData = _getDemoData(path);
-        // if (!storeData && storeData !== "") {
-        //     callback(FileSystemError.NOT_FOUND);
-        // } else if (typeof storeData !== "string") {
-        //     callback(FileSystemError.INVALID_PARAMS);
-        // } else {
-        //     var name = _nameFromPath(path);
-        //     callback(null, storeData, _makeStat(storeData[name]));
-        // }
-        throw new Error('implement readFile /getFile');
+        _getFile(path, function(f) {
+            if (typeof f === 'string') {
+                callback(f);
+            } else {
+                f.read(function(data, status) {
+                    var stat = _makeStat(f);
+                    callback(null, data, stat);
+                });
+            }
+        });
     }
 
 

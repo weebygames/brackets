@@ -25,3 +25,9 @@
 [submodule "src/extensions/default/JSLint/thirdparty/jslint"]
 	path = src/extensions/default/JSLint/thirdparty/jslint
 	url = https://github.com/peterflynn/JSLint.git
+[submodule "thirdparty/webdavjs"]
+	path = thirdparty/webdavjs
+	url = https://github.com/weebygames/webdavjs
+[submodule "src/thirdparty/webdavjs"]
+	path = src/thirdparty/webdavjs
+	url = https://github.com/weebygames/webdavjs
