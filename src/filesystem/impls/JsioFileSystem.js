@@ -185,23 +185,25 @@ define(function (require, exports, module) {
 
         // TODO: Make use of the options for verifying writes
         _getFile(path, function(f) {
-            if (typeof f === 'string') {
+            var created = false;
+            if (f === 'NotFound') {
+                created = true;
+                f = fs.file(path);
+            } else if (typeof f === 'string') {
                 callback(f);
-            } else {
-                f.write(data, function(data, status) {
-                    if (status >= 300) {
-                        // TODO: better error handling
-                        callback(FileSystemError.UNKNOWN);
-                    } else {
-                        // TODO: find out if the file was created or not
-                        var created = false;
-
-                        stat(path, function (err, stat) {
-                            callback(err, stat, created);
-                        });
-                    }
-                });
+                return
             }
+
+            f.write(data, function(data, status) {
+                if (status >= 300) {
+                    // TODO: better error handling
+                    callback(FileSystemError.UNKNOWN);
+                } else {
+                    stat(path, function (err, stat) {
+                        callback(err, stat, created);
+                    });
+                }
+            });
         });
     }
 
