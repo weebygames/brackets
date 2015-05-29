@@ -31,7 +31,9 @@ define(function (require, exports, module) {
     
     var EventDispatcher = require("utils/EventDispatcher");
     
-    
+    // var HOST = "localhost";
+    var HOST = 'brackets_node-' + window.location.host;
+
     /**
      * Connection attempts to make before failing
      * @type {number}
@@ -82,16 +84,16 @@ define(function (require, exports, module) {
         var port = null;
         var ws = null;
         setDeferredTimeout(deferred, CONNECTION_TIMEOUT);
-        
-        brackets.app.getNodeState(function (err, nodePort) {
+
+        var onNodeState = function (err, nodePort) {
             if (!err && nodePort && deferred.state() !== "rejected") {
                 port = nodePort;
-                ws = new WebSocket("ws://localhost:" + port);
-                
+                ws = new WebSocket("ws://" + HOST + ":" + port + "/socket.io");
+
                 // Expect ArrayBuffer objects from Node when receiving binary
                 // data instead of DOM Blobs, which are the default.
                 ws.binaryType = "arraybuffer";
-                
+
                 // If the server port isn't open, we get a close event
                 // at some point in the future (and will not get an onopen 
                 // event)
@@ -109,8 +111,15 @@ define(function (require, exports, module) {
             } else {
                 deferred.reject("brackets.app.getNodeState error: " + err);
             }
-        });
-        
+        };
+
+
+        if (brackets.inBrowser) {
+            setTimeout(function() { onNodeState(null, 80); });
+        } else {
+            brackets.app.getNodeState(onNodeState);
+        }
+
         return deferred.promise();
     }
     
@@ -256,11 +265,7 @@ define(function (require, exports, module) {
         var deferred = $.Deferred();
         var attemptCount = 0;
         var attemptTimestamp = null;
-        
-        if (brackets.inBrowser) {
-            return deferred.reject("Node-side code is not supported when running in-browser").promise();
-        }
-        
+
         // Called after a successful connection to do final setup steps
         function registerHandlersAndDomains(ws, port) {
             // Called if we succeed at the final setup
@@ -565,7 +570,11 @@ define(function (require, exports, module) {
         }
         
         if (this.connected()) {
-            $.getJSON("http://localhost:" + this._port + "/api")
+            $.ajax({
+                    dataType: "json",
+                    url: "http://" + HOST + ":" + this._port + "/api",
+                    xhrFields: {withCredentials: true}
+                })
                 .done(refreshInterfaceCallback)
                 .fail(function (err) { deferred.reject(err); });
         } else {

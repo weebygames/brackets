@@ -57,8 +57,14 @@ define(function (require, exports, module) {
     
     // Parse src/config.json
     try {
+
+        // Patch the config for jsio!
+        // TODO: Do this better
+        configJSON = configJSON.replace(/https:\/\/s3\.amazonaws\.com\/extend\.brackets\/registry/g, window.location.origin + '/brackets_proxy/registry');
+
         global.brackets.metadata = JSON.parse(configJSON);
         global.brackets.config = global.brackets.metadata.config;
+
     } catch (err) {
         console.log(err);
     }

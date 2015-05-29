@@ -222,13 +222,6 @@ define(function (require, exports, module) {
     function unlink(path, callback) {
         console.log("Unlink: " + path);
 
-        // FIXME
-        throw new Error();
-    }
-
-    function moveToTrash(path, callback) {
-        console.log("Trash file: " + path);
-
         _getFile(path, function(f) {
             if (typeof f === 'string') {
                 callback(f);
@@ -243,6 +236,15 @@ define(function (require, exports, module) {
                 });
             }
         });
+    }
+
+    function moveToTrash(path, callback) {
+        console.log("Trash file: " + path);
+
+        // TODO: Fix this
+        console.warn('TODO: Currently an alias for unlink');
+
+        unlink(path, callback);
     }
 
     function initWatchers(changeCallback, offlineCallback) {

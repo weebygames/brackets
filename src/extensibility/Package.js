@@ -39,7 +39,8 @@ define(function (require, exports, module) {
         Strings              = require("strings"),
         ExtensionLoader      = require("utils/ExtensionLoader"),
         NodeConnection       = require("utils/NodeConnection"),
-        PreferencesManager   = require("preferences/PreferencesManager");
+        PreferencesManager   = require("preferences/PreferencesManager"),
+        global               = require("utils/Global").global;
     
     PreferencesManager.definePreference("proxy", "string", undefined);
     
@@ -148,7 +149,7 @@ define(function (require, exports, module) {
     function install(path, nameHint, _doUpdate) {
         return _extensionManagerCall(function (extensionManager) {
             var d                       = new $.Deferred(),
-                destinationDirectory    = ExtensionLoader.getUserExtensionPath(),
+                destinationDirectory    = ExtensionLoader.getUserExtensionPath('dir'),
                 disabledDirectory       = destinationDirectory.replace(/\/user$/, "/disabled"),
                 systemDirectory         = FileUtils.getNativeBracketsDirectoryPath() + "/extensions/default/";
             
@@ -165,12 +166,20 @@ define(function (require, exports, module) {
                     if (result.installationStatus !== InstallationStatuses.INSTALLED || _doUpdate) {
                         d.resolve(result);
                     } else {
+                        var baseUrl;
+                        if (brackets.inBrowser) {
+                            baseUrl = result.installedTo.replace(global.brackets.config.extensions_dir,
+                                    global.brackets.config.extensions_url);
+                        } else {
+                            baseUrl = FileUtils.convertWindowsPathToUnixPath(result.installedTo);
+                        }
+
                         // This was a new extension and everything looked fine.
                         // We load it into Brackets right away.
                         ExtensionLoader.loadExtension(result.name, {
                             // On Windows, it looks like Node converts Unix-y paths to backslashy paths.
                             // We need to convert them back.
-                            baseUrl: FileUtils.convertWindowsPathToUnixPath(result.installedTo)
+                            baseUrl: baseUrl
                         }, "main").then(function () {
                             d.resolve(result);
                         }, function () {
@@ -478,12 +487,9 @@ define(function (require, exports, module) {
     // TODO: duplicates code from StaticServer
     // TODO: can this be done lazily?
     AppInit.appReady(function () {
-        if (brackets.inBrowser) {
-            return;
-        }
         _nodeConnection = new NodeConnection();
         _nodeConnection.connect(true).then(function () {
-            var domainPath = FileUtils.getNativeBracketsDirectoryPath() + "/" + FileUtils.getNativeModuleDirectoryPath(module) + "/node/ExtensionManagerDomain";
+            var domainPath = FileUtils.getBracketsHome() + "/" + FileUtils.getNativeModuleDirectoryPath(module) + "/node/ExtensionManagerDomain";
             
             _nodeConnection.loadDomains(domainPath, true)
                 .then(

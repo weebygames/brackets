@@ -45,7 +45,8 @@ define(function (require, exports, module) {
         FileUtils      = require("file/FileUtils"),
         Async          = require("utils/Async"),
         ExtensionUtils = require("utils/ExtensionUtils"),
-        UrlParams      = require("utils/UrlParams").UrlParams;
+        UrlParams      = require("utils/UrlParams").UrlParams,
+        global         = require("utils/Global").global;
 
     // default async initExtension timeout
     var INIT_EXTENSION_TIMEOUT = 10000;
@@ -76,12 +77,15 @@ define(function (require, exports, module) {
      * /Users/<user>/Application Support/Brackets/extensions/user on the mac, and
      * C:\Users\<user>\AppData\Roaming\Brackets\extensions\user on windows.
      */
-    function getUserExtensionPath() {
-        if (brackets.inBrowser) {  // TODO: how will user-installed extensions work in-browser?
-            return "$.brackets.user.extensions$";
+    function getUserExtensionPath(type) {
+        var res;
+        if (type === 'dir') {
+            res = global.brackets.config.extensions_dir;
+        } else {
+            res = global.brackets.config.extensions_url;
         }
-        
-        return brackets.app.getApplicationSupportDirectory() + "/extensions/user";
+
+        return res || (brackets.app.getApplicationSupportDirectory() + "/extensions/user");
     }
     
     /**
@@ -174,7 +178,7 @@ define(function (require, exports, module) {
 
             contexts[name] = extensionRequire;
             extensionRequire([entryPoint], extensionRequireDeferred.resolve, extensionRequireDeferred.reject);
-            
+
             return extensionRequireDeferred.promise();
         }).then(function (module) {
             // Extension loaded normally
@@ -390,11 +394,11 @@ define(function (require, exports, module) {
             // Only init once. Return a resolved promise.
             return new $.Deferred().resolve().promise();
         }
-        
+
         // Load *subset* of the usual builtin extensions list, and don't try to find any user/dev extensions
         if (brackets.inBrowser) {
-            var basePath = PathUtils.directory(window.location.href) + "extensions/default/",
-                defaultExtensions = [
+            var basePath = PathUtils.directory(window.location.href) + "extensions/default/";
+            var defaultExtensions = [
 //                    "test-server-file-system",  // uncomment (and update the root main.js) to test your own FileSystem back-end
                     "CloseOthers",
                     "CSSCodeHints",
@@ -424,9 +428,10 @@ define(function (require, exports, module) {
                     baseUrl: basePath + item
                 };
                 return loadExtension(item, extConfig, "main");
+            }).then(function() {
+                return loadAllExtensionsInNativeDirectory(getUserExtensionPath());
             });
         }
-        
         
         if (!paths) {
             params.parse();
@@ -437,7 +442,7 @@ define(function (require, exports, module) {
                 paths = ["default", "dev", getUserExtensionPath()];
             }
         }
-        
+
         // Load extensions before restoring the project
         
         // Get a Directory for the user extension directory and create it if it doesn't exist.

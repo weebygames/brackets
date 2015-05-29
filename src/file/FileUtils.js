@@ -38,7 +38,8 @@ define(function (require, exports, module) {
         LanguageManager     = require("language/LanguageManager"),
         PerfUtils           = require("utils/PerfUtils"),
         Strings             = require("strings"),
-        StringUtils         = require("utils/StringUtils");
+        StringUtils         = require("utils/StringUtils"),
+        global              = require("utils/Global").global;
     
     // These will be loaded asynchronously
     var DocumentCommandHandlers, LiveDevelopmentUtils;
@@ -301,6 +302,19 @@ define(function (require, exports, module) {
         var directory = pathname.substr(0, pathname.lastIndexOf("/"));
         return convertToNativePath(directory);
     }
+
+    /**
+     * Returns the path on the filesystem where brackets can be found.
+     * 
+     * @return {string}
+     */
+    function getBracketsHome() {
+        if (brackets.inBrowser) {
+            return global.brackets.config.brackets_home;
+        } else {
+            return getNativeBracketsDirectoryPath();
+        }
+    }
     
     /**
      * Given the module object passed to JS module define function,
@@ -319,6 +333,13 @@ define(function (require, exports, module) {
             // Remove module name and trailing slash from path.
             path = path.substr(0, path.lastIndexOf("/"));
         }
+
+        if (brackets.inBrowser) {
+            if (path && path.indexOf('./') === 0) {
+                path = path.replace(/\.\//, 'src/');
+            }
+        }
+
         return path;
     }
     
@@ -525,6 +546,7 @@ define(function (require, exports, module) {
     exports.convertToNativePath            = convertToNativePath;
     exports.convertWindowsPathToUnixPath   = convertWindowsPathToUnixPath;
     exports.getNativeBracketsDirectoryPath = getNativeBracketsDirectoryPath;
+    exports.getBracketsHome                = getBracketsHome;
     exports.getNativeModuleDirectoryPath   = getNativeModuleDirectoryPath;
     exports.stripTrailingSlash             = stripTrailingSlash;
     exports.isStaticHtmlFileExt            = isStaticHtmlFileExt;
