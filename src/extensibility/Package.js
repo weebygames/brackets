@@ -434,6 +434,11 @@ define(function (require, exports, module) {
      *     rejected if there was an error.
      */
     function remove(path) {
+        if (brackets.inBrowser) {
+            path = path.replace(global.brackets.config.extensions_url,
+                    global.brackets.config.extensions_dir);
+        }
+
         return _extensionManagerCall(function (extensionManager) {
             return extensionManager.remove(path);
         });
