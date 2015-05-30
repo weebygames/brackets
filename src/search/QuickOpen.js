@@ -377,8 +377,7 @@ define(function (require, exports, module) {
             }
         }
     };
-    
-    
+
     function _doSearchFileList(query, matcher) {
         // Strip off line/col number suffix so it doesn't interfere with filename search
         var cursorPos = extractCursorPos(query);
@@ -483,9 +482,19 @@ define(function (require, exports, module) {
         
         // Reflect current search mode in UI
         this._updateDialogLabel(null, query);
-        
+
         // No matching plugin: use default file search mode
-        return searchFileList(query, this._filenameMatcher);
+        var searchResult = searchFileList(query, this._filenameMatcher);
+
+        // The search result is a promise, meaning we should show a loading indicator
+        if (searchResult.then) {
+            this.spinner.css("display", "block");
+            searchResult.then(function() {
+                    this.spinner.css("display", "none");
+                }.bind(this));
+        }
+
+        return searchResult;
     };
 
     /**
@@ -649,7 +658,10 @@ define(function (require, exports, module) {
         this.modalBar = new ModalBar(searchBarHTML, true);
         
         this.modalBar.on("close", this._handleCloseBar);
-        
+
+        this.spinner = $("<span class='spinner inline spin'/>").appendTo(this.modalBar.getRoot().children().first());
+        this.spinner.css("display", "none");
+
         this.$searchField = $("input#quickOpenSearch");
         
         this.searchField = new QuickSearchField(this.$searchField, {
