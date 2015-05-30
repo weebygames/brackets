@@ -567,7 +567,7 @@ define(function (require, exports, module) {
 
         if (brackets.inBrowser) {
             var visitPath = this._path;
-            visitPath = global.brackets.config.brackets_home + visitPath;
+            visitPath = global.brackets.config.webdav_home + visitPath;
 
             _filesystemDomainCall(function (filesystemDomain) {
                 filesystemDomain.visit(visitPath)
@@ -582,7 +582,7 @@ define(function (require, exports, module) {
 
                             var path = res.path;
                             // must go from fs to html
-                            path = path.replace(global.brackets.config.brackets_home, '');
+                            path = path.replace(global.brackets.config.webdav_home, '');
 
                             // var ctor = res.type === 'file' ? File : Directory;
                             var ctor = FileSystemEntry;

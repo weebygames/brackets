@@ -23,6 +23,7 @@
         "healthDataServerURL" : "https://healthdev.brackets.io/healthDataLog",
         "extensions_url": "/brackets_extensions",
         "extensions_dir": "/home/weeby/projects/brackets_extensions",
+        "webdav_home": "/home/weeby/projects",
         "brackets_home": "/home/weeby/dev/brackets"
     },
     "name": "Brackets",

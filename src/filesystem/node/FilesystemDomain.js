@@ -43,17 +43,29 @@ function _cmdVisit(path, callback) {
     var results = [];
 
     var opts = {
+        follow_symlinks: true, // default is off
+        no_recurse: false,      // only recurse one level deep
         max_depth: 10
     };
 
+    var ignorePattern = /\/\..*/;
+
     walkdir.sync(path, opts, function(path, stat) {
         // var filePath = path.join(dirPath, fileName);
+
+        if (path.match(ignorePattern)) {
+            return;
+        }
+
         var type = '';
         if (stat.isDirectory()) {
             type = 'dir';
         } else if (stat.isFile()) {
             type = 'file';
+        } else {
+            return;
         }
+
         results.push({ path: path, type: type });
     });
 
