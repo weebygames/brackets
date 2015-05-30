@@ -70,6 +70,7 @@ define(function (require, exports, module) {
         AppInit         = require("utils/AppInit"),
         NodeConnection  = require("utils/NodeConnection"),
         FileUtils       = require("file/FileUtils"),
+        FileSystem      = require("filesystem/FileSystem"),
         global          = require("utils/Global").global;
     
     var VISIT_DEFAULT_MAX_DEPTH = 100,
@@ -568,14 +569,13 @@ define(function (require, exports, module) {
         if (brackets.inBrowser) {
             var visitPath = this._path;
             visitPath = global.brackets.config.webdav_home + visitPath;
+            var fs = this._fileSystem;
 
             _filesystemDomainCall(function (filesystemDomain) {
                 filesystemDomain.visit(visitPath)
                     .done(function (results) {
 
                         console.log('results count: ', results.length);
-                        // var File            = require("filesystem/File");
-                        // var Directory       = require("filesystem/Directory");
 
                         for (var i = 0; i < results.length; i++) {
                             var res = results[i];
@@ -584,17 +584,18 @@ define(function (require, exports, module) {
                             // must go from fs to html
                             path = path.replace(global.brackets.config.webdav_home, '');
 
-                            // var ctor = res.type === 'file' ? File : Directory;
-                            var ctor = FileSystemEntry;
-                            var entry = new ctor(path, this._fileSystem);
-                            // FIXME: bit of a hack
-                            entry._isFile = res.type === 'file';
+                            var entry;
+                            if (res.type === 'file') {
+                                entry = fs.getFileForPath(path);
+                            } else {
+                                entry = fs.getDirectoryForPath(path);
+                            }
+
                             visitor(entry);
                         }
                         callback(null);
                     })
                     .fail(function (error) {
-                        debugger
                         callback(error);
                     });
             });
