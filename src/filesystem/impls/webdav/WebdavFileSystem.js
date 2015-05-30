@@ -185,7 +185,7 @@ define(function (require, exports, module) {
             } else {
                 f.read(function(data, status) {
                     var stat = _makeStat(f);
-                    callback(null, data, stat);
+                    callback(null, data || '', stat);
                 });
             }
         });
