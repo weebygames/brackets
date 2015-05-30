@@ -66,7 +66,11 @@ define(function (require, exports, module) {
     "use strict";
     
     var FileSystemError = require("filesystem/FileSystemError"),
-        WatchedRoot     = require("filesystem/WatchedRoot");
+        WatchedRoot     = require("filesystem/WatchedRoot"),
+        AppInit         = require("utils/AppInit"),
+        NodeConnection  = require("utils/NodeConnection"),
+        FileUtils       = require("file/FileUtils"),
+        global          = require("utils/Global").global;
     
     var VISIT_DEFAULT_MAX_DEPTH = 100,
         VISIT_DEFAULT_MAX_ENTRIES = 30000;
@@ -74,6 +78,29 @@ define(function (require, exports, module) {
     /* Counter to give every entry a unique id */
     var nextId = 0;
     
+    /**
+     * @private
+     * @type {NodeConnection}
+     * Connects to ExtensionManagerDomain
+     */
+    var _nodeConnection;
+
+    /**
+     * @private
+     * @type {jQuery.Deferred.<NodeConnection>}
+     * A deferred which is resolved with a NodeConnection or rejected if
+     * we are unable to connect to Node.
+     */
+    var _nodeConnectionDeferred = $.Deferred();
+
+    function _filesystemDomainCall(callback) {
+        if (_nodeConnection.domains.filesystem) {
+            return callback(_nodeConnection.domains.filesystem);
+        } else {
+            return new $.Deferred().reject("filesystem domain is undefined").promise();
+        }
+    }
+
     /**
      * Model for a file system entry. This is the base class for File and Directory,
      * and is never used directly.
@@ -537,31 +564,84 @@ define(function (require, exports, module) {
         }
 
         options.maxEntriesCounter = { value: options.maxEntries };
-        
-        this.stat(function (err, stats) {
-            if (err) {
-                callback(err);
-                return;
-            }
-            
-            this._visitHelper(stats, {}, visitor, options, function (err) {
-                if (callback) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-                    
-                    if (options.maxEntriesCounter.value < 0) {
-                        callback(FileSystemError.TOO_MANY_ENTRIES);
-                        return;
-                    }
-                    
-                    callback(null);
+
+        if (brackets.inBrowser) {
+            var visitPath = this._path;
+            visitPath = global.brackets.config.brackets_home + visitPath;
+
+            _filesystemDomainCall(function (filesystemDomain) {
+                filesystemDomain.visit(visitPath)
+                    .done(function (results) {
+
+                        console.log('results count: ', results.length);
+                        // var File            = require("filesystem/File");
+                        // var Directory       = require("filesystem/Directory");
+
+                        for (var i = 0; i < results.length; i++) {
+                            var res = results[i];
+
+                            var path = res.path;
+                            // must go from fs to html
+                            path = path.replace(global.brackets.config.brackets_home, '');
+
+                            // var ctor = res.type === 'file' ? File : Directory;
+                            var ctor = FileSystemEntry;
+                            var entry = new ctor(path, this._fileSystem);
+                            // FIXME: bit of a hack
+                            entry._isFile = res.type === 'file';
+                            visitor(entry);
+                        }
+                        callback(null);
+                    })
+                    .fail(function (error) {
+                        debugger
+                        callback(error);
+                    });
+            });
+        } else {
+            this.stat(function (err, stats) {
+                if (err) {
+                    callback(err);
+                    return;
                 }
+                
+                this._visitHelper(stats, {}, visitor, options, function (err) {
+                    if (callback) {
+                        if (err) {
+                            callback(err);
+                            return;
+                        }
+                        
+                        if (options.maxEntriesCounter.value < 0) {
+                            callback(FileSystemError.TOO_MANY_ENTRIES);
+                            return;
+                        }
+                        
+                        callback(null);
+                    }
+                }.bind(this));
             }.bind(this));
-        }.bind(this));
+        }
     };
     
+    AppInit.appReady(function () {
+        _nodeConnection = new NodeConnection();
+        _nodeConnection.connect(true).then(function () {
+            var domainPath = FileUtils.getBracketsHome() + "/" + FileUtils.getNativeModuleDirectoryPath(module) + "/node/FilesystemDomain";
+            
+            _nodeConnection.loadDomains(domainPath, true)
+                .then(
+                    function () {
+                        _nodeConnectionDeferred.resolve();
+                    },
+                    function () { // Failed to connect
+                        console.error("[Filesystem] Failed to connect to node", arguments);
+                        _nodeConnectionDeferred.reject();
+                    }
+                );
+        });
+    });
+
     // Export this class
     module.exports = FileSystemEntry;
 });

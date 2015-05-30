@@ -1,0 +1,9 @@
+{
+  "name": "brackets-filesystem",
+  "description": "Used for optimized network filesystem requests",
+  "version": "1.0.0",
+  "dependencies": {
+    "file": "^0.2.2"
+  },
+  "devDependencies": {}
+}

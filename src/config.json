@@ -18,11 +18,11 @@
         "extension_listing_url": "",
         "extension_registry": "https://s3.amazonaws.com/extend.brackets/registry.json",
         "extension_url": "https://s3.amazonaws.com/extend.brackets/{0}/{0}-{1}.zip",
-        "extensions_url": "/brackets_extensions",
-        "extensions_dir": "/home/weeby/projects/brackets_extensions",
         "linting.enabled_by_default": true,
         "build_timestamp": "",
         "healthDataServerURL" : "https://healthdev.brackets.io/healthDataLog",
+        "extensions_url": "/brackets_extensions",
+        "extensions_dir": "/home/weeby/projects/brackets_extensions",
         "brackets_home": "/home/weeby/dev/brackets"
     },
     "name": "Brackets",
