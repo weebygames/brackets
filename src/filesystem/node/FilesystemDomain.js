@@ -27,9 +27,7 @@ indent: 4, maxerr: 50 */
 
 "use strict";
 
-var file = require('file');
 var walkdir = require('walkdir');
-// var path = require('path');
 
 var Errors = {
     CANCELED: "CANCELED"
