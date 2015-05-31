@@ -73,7 +73,8 @@ define(function (require, exports, module) {
         FileSyncManager     = require("project/FileSyncManager"),
         ProjectModel        = require("project/ProjectModel"),
         FileTreeView        = require("project/FileTreeView"),
-        ViewUtils           = require("utils/ViewUtils");
+        ViewUtils           = require("utils/ViewUtils"),
+        global              = require("utils/Global").global;
     
     // Needed to ensure that menus are set up when we need them.
     // See #10115
@@ -1018,6 +1019,12 @@ define(function (require, exports, module) {
             .done(function () {
                 if (path) {
                     // use specified path
+                    if (brackets.inBrowser) {
+                        // If the path starts with the webdav_home, remove it for proper path resolution
+                        var regex = new RegExp('^' + global.brackets.config.webdav_home);
+                        path = path.replace(regex, '');
+                    }
+
                     _loadProject(path, false).then(result.resolve, result.reject);
                 } else {
                     // Pop up a folder browse dialog
