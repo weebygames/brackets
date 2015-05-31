@@ -28,3 +28,6 @@
 [submodule "src/thirdparty/webdavjs"]
 	path = src/thirdparty/webdavjs
 	url = https://github.com/weebygames/webdavjs
+[submodule "src/extensions/default/brackets-extension-jsio"]
+	path = src/extensions/default/brackets-extension-jsio
+	url = https://github.com/weebygames/brackets-extension-jsio
