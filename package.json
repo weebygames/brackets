@@ -18,6 +18,7 @@
         "grunt-jasmine-node": "0.1.0",
         "grunt-cli": "0.1.9",
         "phantomjs": "1.9.13",
+        "grunt-auto-install": "^0.2.3",
         "grunt-lib-phantomjs": "0.3.0",
         "grunt-contrib-jshint": "0.6.0",
         "grunt-contrib-watch": "0.4.3",
@@ -41,7 +42,7 @@
         "grunt-cleanempty": "1.0.3"
     },
     "scripts": {
-        "postinstall": "grunt install",
+        "postinstall": "grunt auto_install && grunt install",
         "test": "grunt cla-check-pull test"
     },
     "licenses": [

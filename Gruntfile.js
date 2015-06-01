@@ -27,6 +27,7 @@ module.exports = function (grunt) {
     // load dependencies
     require('load-grunt-tasks')(grunt, {pattern: ['grunt-contrib-*', 'grunt-targethtml', 'grunt-usemin', 'grunt-cleanempty']});
     grunt.loadTasks('tasks');
+    grunt.loadNpmTasks('grunt-auto-install');
 
     // Project configuration.
     grunt.initConfig({
@@ -41,6 +42,17 @@ module.exports = function (grunt) {
                         'src/styles/brackets.css'
                     ]
                 }]
+            }
+        },
+        auto_install: {
+            filesystem: {
+                options: {
+                    cwd: 'src/filesystem/node',
+                    stdout: true,
+                    stderr: true,
+                    failOnError: true,
+                    npm: ''
+                }
             }
         },
         copy: {
