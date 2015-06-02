@@ -32,7 +32,7 @@ define(function (require, exports, module) {
     var EventDispatcher = require("utils/EventDispatcher");
     
     // var HOST = "localhost";
-    var HOST = 'brackets_node-' + window.location.host;
+    var HOST = 'brackets-' + window.location.host;
 
     /**
      * Connection attempts to make before failing
