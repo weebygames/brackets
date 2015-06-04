@@ -309,7 +309,7 @@ define(function (require, exports, module) {
      * @return {string}
      */
     function getBracketsHome() {
-        if (brackets.inBrowser) {
+        if (global.brackets.config.brackets_home) {
             return global.brackets.config.brackets_home;
         } else {
             return getNativeBracketsDirectoryPath();
@@ -517,14 +517,45 @@ define(function (require, exports, module) {
         });
         return pathArray.join("/");
     }
-    
+
+    /**
+     * Useful for remote filesystems where the root directory is not '/'.
+     * Configure through global.brackets.config.server_fs_home
+     *
+     * @param  {string} path
+     */
+    function ensureServerPath(path) {
+        var configHome = global.brackets.config.server_fs_home;
+        if (configHome) {
+            if (path.indexOf(configHome) !== 0) {
+                return configHome + path;
+            }
+        }
+        return path;
+    };
+
+    /**
+     * Useful for remote filesystems where the root directory is not '/'
+     * Configure through global.brackets.config.server_fs_home
+     *
+     * @param  {string} path
+     */
+    function ensureClientPath(path) {
+        var configHome = global.brackets.config.server_fs_home;
+        if (configHome) {
+            var regex = new RegExp('^' + configHome);
+            return path.replace(regex, '');
+        }
+        return path;
+    };
+
     // Asynchronously load DocumentCommandHandlers
     // This avoids a temporary circular dependency created
     // by relocating showFileOpenError() until deprecation is over
     require(["document/DocumentCommandHandlers"], function (dchModule) {
         DocumentCommandHandlers = dchModule;
     });
-    
+
     // Asynchronously load LiveDevelopmentUtils
     // This avoids a temporary circular dependency created
     // by relocating isStaticHtmlFileExt() until deprecation is over
@@ -561,4 +592,6 @@ define(function (require, exports, module) {
     exports.comparePaths                   = comparePaths;
     exports.MAX_FILE_SIZE                  = MAX_FILE_SIZE;
     exports.encodeFilePath                 = encodeFilePath;
+    exports.ensureServerPath               = ensureServerPath;
+    exports.ensureClientPath               = ensureClientPath;
 });

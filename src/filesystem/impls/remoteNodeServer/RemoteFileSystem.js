@@ -25,13 +25,17 @@
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, regexp: true, indent: 4, maxerr: 50 */
 /*global define, window, PathUtils */
 
-// Requires configuring 'global.brackets.config.server_fs_home'
 define(function (require, exports, module) {
     "use strict";
 
     var FileSystemError = require("filesystem/FileSystemError"),
         FileSystemStats = require("filesystem/FileSystemStats"),
-        AjaxFileSystem  = require("filesystem/impls/demo/AjaxFileSystem");
+        AjaxFileSystem  = require("filesystem/impls/demo/AjaxFileSystem"),
+        AppInit         = require("utils/AppInit"),
+        NodeConnection  = require("utils/NodeConnection"),
+        FileUtils       = require("file/FileUtils"),
+        FileSystem      = require("filesystem/FileSystem"),
+        global          = require("utils/Global").global;
 
 
     // Brackets uses FileSystem to read from various internal paths that are not in the user's project storage. We
@@ -41,8 +45,57 @@ define(function (require, exports, module) {
 //    var USER_EXTENSIONS_PREFIX = "/.brackets.user.extensions$/";
 //    var CONFIG_PREFIX = "/.$brackets.config$/";
 
-    var fs = new WebDAV.Fs('http://webdav-' + window.location.host);
-    WebDAV.useCredentials = true;
+    /**
+     * @private
+     * @type {NodeConnection}
+     * Connects to ExtensionManagerDomain
+     */
+    var _nodeConnection;
+
+    /**
+     * @private
+     * @type {jQuery.Deferred.<NodeConnection>}
+     * A deferred which is resolved with a NodeConnection or rejected if
+     * we are unable to connect to Node.
+     */
+    var _nodeConnectionDeferred = $.Deferred();
+
+    function _filesystemDomainCall(callback) {
+        if (!_nodeConnection) {
+            _nodeConnection = new NodeConnection();
+            _nodeConnection.connect(true).then(function () {
+                var domainPath = FileUtils.getBracketsHome() + "/" + FileUtils.getNativeModuleDirectoryPath(module) + "/node/RemoteFilesystemDomain";
+
+                _nodeConnection.loadDomains(domainPath, true)
+                    .then(
+                        function () {
+                            console.log("[FileSystem] Connection established!");
+                            _nodeConnectionDeferred.resolve();
+                        },
+                        function () { // Failed to connect
+                            console.error("[Filesystem] Failed to connect to node", arguments);
+                            _nodeConnectionDeferred.reject();
+                        }
+                    );
+            });
+        }
+
+        if (_nodeConnection.domains.filesystem) {
+            // The filesystem is ready for use, immediately call back
+            return callback(_nodeConnection.domains.filesystem);
+        } else if(_nodeConnection) {
+            // There is a connection, waiting to connect
+            return _nodeConnectionDeferred.done(function() {
+                callback(_nodeConnection.domains.filesystem);
+            });
+        } else {
+            console.error('FilesystemDomain is not ready');
+            return new $.Deferred().reject("filesystem domain is undefined").promise();
+        }
+    }
+
+    // var fs = new WebDAV.Fs('http://webdav-' + window.location.host);
+    // WebDAV.useCredentials = true;
 
     function _startsWith(path, prefix) {
         return (path.substr(0, prefix.length) === prefix);
@@ -57,26 +110,10 @@ define(function (require, exports, module) {
         return segments[segments.length - 1];
     }
 
-    function _makeStat(webdavFile) {
-        return {
-            isFile: webdavFile.type === 'file',
-            mtime: webdavFile.mtime,
-            hash: webdavFile.size * webdavFile.size * webdavFile.mtime.getTime(),
-            size: webdavFile.size
-        };
-    }
-
-    function _getFile(path, callback) {
-        var f = fs.file(path);
-
-        f.propfind(function(props) {
-            if (!f.exists) {
-                callback(FileSystemError.NOT_FOUND);
-            } else {
-                callback(f);
-            }
-        });
-    }
+    function _parseStat(stat) {
+        stat.mtime && (stat.mtime = new Date(stat.mtime));
+        return stat;
+    };
 
     function stat(path, callback) {
         if (_startsWith(path, CORE_EXTENSIONS_PREFIX)) {
@@ -84,13 +121,16 @@ define(function (require, exports, module) {
             return;
         }
 
-        _getFile(path, function(f) {
-            if (typeof f === 'string') {
-                callback(f);
-            } else {
-                var stat = _makeStat(f);
-                callback(null, stat);
-            }
+        _filesystemDomainCall(function (filesystemDomain) {
+            filesystemDomain.stat(path)
+                .done(function (stat) {
+                    if (stat.err) {
+                        callback(stat.err);
+                    } else {
+                        _parseStat(stat);
+                        callback(null, stat);
+                    }
+                });
         });
     }
 
@@ -110,20 +150,16 @@ define(function (require, exports, module) {
             return;
         }
 
-        _getFile(path, function(f) {
-            if (typeof f === 'string') {
-                callback(f);
-            } else {
-                f.children(function(children) {
-                    var names = [];
-                    var stats = [];
-                    children.forEach(function (child) {
-                        names.push(child.name);
-                        stats.push(_makeStat(child));
-                    });
-                    callback(null, names, stats);
+        _filesystemDomainCall(function (filesystemDomain) {
+            filesystemDomain.readDir(path)
+                .done(function (results) {
+                    if (results.err) {
+                        callback(results.err);
+                    } else {
+                        results.stats.forEach(_parseStat);
+                        callback(null, results.names, results.stats);
+                    }
                 });
-            }
         });
     }
 
@@ -135,60 +171,56 @@ define(function (require, exports, module) {
             mode = parseInt("0755", 8);
         }
 
-        // TODO: add support for setting the mode
-        var f = fs.dir(path);
-        f.mkdir(function(data, status) {
-            if (status >= 300) {
-                // TODO: better error handling
-                callback(FileSystemError.UNKNOWN);
-            } else {
-                stat(path, function (err, stat) {
-                    callback(err, stat);
+        _filesystemDomainCall(function (filesystemDomain) {
+            filesystemDomain.makeDir(path, mode)
+                .done(function (stat) {
+                    if (stat.err) {
+                        callback(stat.err);
+                    } else {
+                        _parseStat(stat);
+                        callback(null, stat);
+                    }
                 });
-            }
         });
     }
 
     function rename(oldPath, newPath, callback) {
         console.log("Rename file: " + oldPath + " -> " + newPath);
 
-        _getFile(oldPath, function(f) {
-            if (typeof f === 'string') {
-                callback(f);
-            } else {
-                f.mv(newPath, function(data, status) {
-                    if (status >= 300) {
-                        // TODO: better error handling
-                        callback(FileSystemError.UNKNOWN);
+        _filesystemDomainCall(function (filesystemDomain) {
+            filesystemDomain.move(oldPath, newPath)
+                .done(function (response) {
+                    if (response.err) {
+                        callback(response.err);
                     } else {
                         callback(null, null);
                     }
                 });
-            }
         });
     }
 
     function readFile(path, options, callback) {
-        console.log("Reading 'file': " + path);
-
         if (typeof options === "function") {
             callback = options;
         }
 
         if (_startsWith(path, CORE_EXTENSIONS_PREFIX)) {
+            console.log("Ajax load: " + path);
             AjaxFileSystem.readFile(path, callback);
             return;
         }
 
-        _getFile(path, function(f) {
-            if (typeof f === 'string') {
-                callback(f);
-            } else {
-                f.read(function(data, status) {
-                    var stat = _makeStat(f);
-                    callback(null, data || '', stat);
+        console.log("Reading 'file': " + path);
+        _filesystemDomainCall(function (filesystemDomain) {
+            filesystemDomain.readFile(path)
+                .done(function (response) {
+                    if (response.err) {
+                        callback(response.err);
+                    } else {
+                        _parseStat(response.stat);
+                        callback(null, response.contents, response.stat);
+                    }
                 });
-            }
         });
     }
 
@@ -196,48 +228,48 @@ define(function (require, exports, module) {
     function writeFile(path, data, options, callback) {
         console.log("Write file: " + path + " [length " + data.length + "]");
 
-        // TODO: Make use of the options for verifying writes
-        _getFile(path, function(f) {
-            var created = false;
-            if (f === 'NotFound') {
-                created = true;
-                f = fs.file(path);
-            } else if (typeof f === 'string') {
-                callback(f);
-                return
-            }
-
-            f.write(data, function(data, status) {
-                if (status >= 300) {
-                    // TODO: better error handling
-                    callback(FileSystemError.UNKNOWN);
-                } else {
-                    stat(path, function (err, stat) {
-                        callback(err, stat, created);
-                    });
-                }
-            });
+        _filesystemDomainCall(function (filesystemDomain) {
+            filesystemDomain.writeFile(path, data, options)
+                .done(function (response) {
+                    if (response.err) {
+                        callback(response.err);
+                    } else {
+                        _parseStat(response.stat);
+                        callback(null, response.stat, response.created);
+                    }
+                });
         });
     }
 
     function unlink(path, callback) {
         console.log("Unlink: " + path);
 
-        _getFile(path, function(f) {
-            if (typeof f === 'string') {
-                callback(f);
-            } else {
-                f.rm(function(data, status) {
-                    if (status >= 300) {
-                        // TODO: better error handling
-                        callback(FileSystemError.UNKNOWN);
+        _filesystemDomainCall(function (filesystemDomain) {
+            filesystemDomain.unlink(path)
+                .done(function (response) {
+                    if (response && response.err) {
+                        callback(response.err);
                     } else {
-                        callback();
+                        callback(null);
                     }
                 });
-            }
         });
     }
+
+    function visit(path, callback) {
+        console.log("Visit: " + path);
+
+        _filesystemDomainCall(function (filesystemDomain) {
+            filesystemDomain.visit(path)
+                .done(function (results) {
+                    if (results.err) {
+                        callback(results.err);
+                    } else {
+                        callback(null, results);
+                    }
+                });
+        });
+    };
 
     function moveToTrash(path, callback) {
         console.log("Trash file: " + path);
@@ -294,6 +326,7 @@ define(function (require, exports, module) {
     exports.watchPath       = watchPath;
     exports.unwatchPath     = unwatchPath;
     exports.unwatchAll      = unwatchAll;
+    exports.visit           = visit;
 
     exports.recursiveWatch    = true;
     exports.normalizeUNCPaths = false;

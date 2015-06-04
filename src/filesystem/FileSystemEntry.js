@@ -66,41 +66,13 @@ define(function (require, exports, module) {
     "use strict";
     
     var FileSystemError = require("filesystem/FileSystemError"),
-        WatchedRoot     = require("filesystem/WatchedRoot"),
-        AppInit         = require("utils/AppInit"),
-        NodeConnection  = require("utils/NodeConnection"),
-        FileUtils       = require("file/FileUtils"),
-        FileSystem      = require("filesystem/FileSystem"),
-        global          = require("utils/Global").global;
+        WatchedRoot     = require("filesystem/WatchedRoot");
     
     var VISIT_DEFAULT_MAX_DEPTH = 100,
         VISIT_DEFAULT_MAX_ENTRIES = 30000;
     
     /* Counter to give every entry a unique id */
     var nextId = 0;
-    
-    /**
-     * @private
-     * @type {NodeConnection}
-     * Connects to ExtensionManagerDomain
-     */
-    var _nodeConnection;
-
-    /**
-     * @private
-     * @type {jQuery.Deferred.<NodeConnection>}
-     * A deferred which is resolved with a NodeConnection or rejected if
-     * we are unable to connect to Node.
-     */
-    var _nodeConnectionDeferred = $.Deferred();
-
-    function _filesystemDomainCall(callback) {
-        if (_nodeConnection.domains.filesystem) {
-            return callback(_nodeConnection.domains.filesystem);
-        } else {
-            return new $.Deferred().reject("filesystem domain is undefined").promise();
-        }
-    }
 
     /**
      * Model for a file system entry. This is the base class for File and Directory,
@@ -566,38 +538,36 @@ define(function (require, exports, module) {
 
         options.maxEntriesCounter = { value: options.maxEntries };
 
-        if (brackets.inBrowser) {
+        if (this._fileSystem._impl.visit) {
             var visitPath = this._path;
-            visitPath = global.brackets.config.webdav_home + visitPath;
+            // visitPath = global.brackets.config.webdav_home + visitPath;
+
             var fs = this._fileSystem;
+            fs._impl.visit(this._path, function(err, results) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
 
-            _filesystemDomainCall(function (filesystemDomain) {
-                filesystemDomain.visit(visitPath)
-                    .done(function (results) {
+                console.log('results count: ', results.length);
+                for (var i = 0; i < results.length; i++) {
+                    var res = results[i];
 
-                        console.log('results count: ', results.length);
+                    var path = res.path;
+                    // must go from fs to html
+                    // path = path.replace(global.brackets.config.webdav_home, '');
 
-                        for (var i = 0; i < results.length; i++) {
-                            var res = results[i];
+                    var entry;
+                    if (res.type === 'file') {
+                        entry = fs.getFileForPath(path);
+                    } else {
+                        entry = fs.getDirectoryForPath(path);
+                    }
 
-                            var path = res.path;
-                            // must go from fs to html
-                            path = path.replace(global.brackets.config.webdav_home, '');
+                    visitor(entry);
+                }
 
-                            var entry;
-                            if (res.type === 'file') {
-                                entry = fs.getFileForPath(path);
-                            } else {
-                                entry = fs.getDirectoryForPath(path);
-                            }
-
-                            visitor(entry);
-                        }
-                        callback(null);
-                    })
-                    .fail(function (error) {
-                        callback(error);
-                    });
+                callback(null);
             });
         } else {
             this.stat(function (err, stats) {
@@ -624,24 +594,6 @@ define(function (require, exports, module) {
             }.bind(this));
         }
     };
-    
-    AppInit.appReady(function () {
-        _nodeConnection = new NodeConnection();
-        _nodeConnection.connect(true).then(function () {
-            var domainPath = FileUtils.getBracketsHome() + "/" + FileUtils.getNativeModuleDirectoryPath(module) + "/node/FilesystemDomain";
-            
-            _nodeConnection.loadDomains(domainPath, true)
-                .then(
-                    function () {
-                        _nodeConnectionDeferred.resolve();
-                    },
-                    function () { // Failed to connect
-                        console.error("[Filesystem] Failed to connect to node", arguments);
-                        _nodeConnectionDeferred.reject();
-                    }
-                );
-        });
-    });
 
     // Export this class
     module.exports = FileSystemEntry;

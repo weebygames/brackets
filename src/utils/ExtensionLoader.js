@@ -70,24 +70,57 @@ define(function (require, exports, module) {
             "text" : srcPath + "/thirdparty/text/text",
             "i18n" : srcPath + "/thirdparty/i18n/i18n"
         };
-    
+
     /**
      * Returns the full path of the default user extensions directory. This is in the users
      * application support directory, which is typically
      * /Users/<user>/Application Support/Brackets/extensions/user on the mac, and
      * C:\Users\<user>\AppData\Roaming\Brackets\extensions\user on windows.
+     *
+     * @param {boolean} [serverSide] - If true, return the server side directory, otherwise return the client side extensions directory
      */
-    function getUserExtensionPath(type) {
-        var res;
-        if (type === 'dir') {
-            res = global.brackets.config.extensions_dir;
-        } else {
-            res = global.brackets.config.extensions_url;
+    function getUserExtensionPath(serverSide) {
+        if (serverSide || !brackets.inBrowser) {
+            if (global.brackets.config.extensions_dir) {
+                return global.brackets.config.extensions_dir;
+            }
+            return brackets.app.getApplicationSupportDirectory() + "/extensions/user";
+        }
+        return global.brackets.config.extensions_url;
+    }
+
+    /**
+     * In the case where the client is running in a browser (outside of the shell),
+     * extensions need to be referenced from both server and client side in different ways
+     *
+     * @param  {string} path
+     */
+    function ensureServerSide(path) {
+        if (brackets.inBrowser) {
+            // Only want to replace the path if it is at the start
+            var re = new RegExp('^' + exports.getUserExtensionPath(false));
+            return path.replace(re, exports.getUserExtensionPath(true));
         }
 
-        return res || (brackets.app.getApplicationSupportDirectory() + "/extensions/user");
+        return path;
     }
-    
+
+    /**
+     * In the case where the client is running in a browser (outside of the shell),
+     * extensions need to be referenced from both server and client side in different ways
+     *
+     * @param  {string} path
+     */
+    function ensureClientSide(path) {
+        if (brackets.inBrowser) {
+            // Only want to replace the path if it is at the start
+            var re = new RegExp('^' + exports.getUserExtensionPath(true));
+            path = path.replace(re, exports.getUserExtensionPath(false));
+        }
+
+        return FileUtils.convertWindowsPathToUnixPath(path);
+    }
+
     /**
      * Returns the require.js require context used to load an extension
      *
@@ -355,6 +388,7 @@ define(function (require, exports, module) {
      * @return {!$.Promise} A promise object that is resolved when all extensions complete loading.
      */
     function loadAllExtensionsInNativeDirectory(directory) {
+        directory = ensureServerSide(directory);
         return _loadAll(directory, {baseUrl: directory}, "main", loadExtension);
     }
     
@@ -489,6 +523,7 @@ define(function (require, exports, module) {
     exports.init = init;
     exports.getUserExtensionPath = getUserExtensionPath;
     exports.getRequireContextForExtension = getRequireContextForExtension;
+    exports.ensureServerSide = ensureServerSide;
     exports.loadExtension = loadExtension;
     exports.testExtension = testExtension;
     exports.loadAllExtensionsInNativeDirectory = loadAllExtensionsInNativeDirectory;

@@ -826,7 +826,7 @@ define(function (require, exports, module) {
 
         var projectPrefFullPath = (rootPath + SETTINGS_FILENAME),
             file   = FileSystem.getFileForPath(projectPrefFullPath);
-            
+
         //Verify that the project preferences file (.brackets.json) is NOT corrupted.
         //If corrupted, display the error message and open the file in editor for the user to edit.
         FileUtils.readAsText(file)
@@ -909,7 +909,7 @@ define(function (require, exports, module) {
                         var perfTimerName = PerfUtils.markStart("Load Project: " + rootPath);
 
                         _projectWarnedForTooManyFiles = false;
-                        
+
                         _setProjectRoot(rootEntry).always(function () {
                             model.setBaseUrl(PreferencesManager.getViewState("project.baseUrl", context) || "");
 
@@ -996,7 +996,6 @@ define(function (require, exports, module) {
         return model.showInTree(entry).then(_saveTreeState);
     }
 
-
     /**
      * Open a new project. Currently, Brackets must always have a project open, so
      * this method handles both closing the current project and opening a new project.
@@ -1012,19 +1011,14 @@ define(function (require, exports, module) {
 
         var result = new $.Deferred();
 
+        path = FileUtils.ensureClientPath(path);
+
         // Confirm any unsaved changes first. We run the command in "prompt-only" mode, meaning it won't
         // actually close any documents even on success; we'll do that manually after the user also oks
         // the folder-browse dialog.
         CommandManager.execute(Commands.FILE_CLOSE_ALL, { promptOnly: true })
             .done(function () {
                 if (path) {
-                    // use specified path
-                    if (brackets.inBrowser) {
-                        // If the path starts with the webdav_home, remove it for proper path resolution
-                        var regex = new RegExp('^' + global.brackets.config.webdav_home);
-                        path = path.replace(regex, '');
-                    }
-
                     _loadProject(path, false).then(result.resolve, result.reject);
                 } else {
                     // Pop up a folder browse dialog

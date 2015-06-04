@@ -149,10 +149,10 @@ define(function (require, exports, module) {
     function install(path, nameHint, _doUpdate) {
         return _extensionManagerCall(function (extensionManager) {
             var d                       = new $.Deferred(),
-                destinationDirectory    = ExtensionLoader.getUserExtensionPath('dir'),
+                destinationDirectory    = ExtensionLoader.getUserExtensionPath(true),
                 disabledDirectory       = destinationDirectory.replace(/\/user$/, "/disabled"),
                 systemDirectory         = FileUtils.getNativeBracketsDirectoryPath() + "/extensions/default/";
-            
+
             var operation = _doUpdate ? "update" : "install";
             extensionManager[operation](path, destinationDirectory, {
                 disabledDirectory: disabledDirectory,
@@ -162,17 +162,11 @@ define(function (require, exports, module) {
             })
                 .done(function (result) {
                     result.keepFile = false;
-                    
+
                     if (result.installationStatus !== InstallationStatuses.INSTALLED || _doUpdate) {
                         d.resolve(result);
                     } else {
-                        var baseUrl;
-                        if (brackets.inBrowser) {
-                            baseUrl = result.installedTo.replace(global.brackets.config.extensions_dir,
-                                    global.brackets.config.extensions_url);
-                        } else {
-                            baseUrl = FileUtils.convertWindowsPathToUnixPath(result.installedTo);
-                        }
+                        var baseUrl = ExtensionLoader.ensureClientSide(result.installedTo);
 
                         // This was a new extension and everything looked fine.
                         // We load it into Brackets right away.
@@ -190,13 +184,11 @@ define(function (require, exports, module) {
                 .fail(function (error) {
                     d.reject(error);
                 });
-            
+
             return d.promise();
         });
     }
-    
-    
-    
+
     /**
      * Special case handling to make the common case of downloading from GitHub easier; modifies 'urlInfo' as
      * needed. Converts a bare GitHub repo URL to the corresponding master ZIP URL; or if given a direct
@@ -434,10 +426,7 @@ define(function (require, exports, module) {
      *     rejected if there was an error.
      */
     function remove(path) {
-        if (brackets.inBrowser) {
-            path = path.replace(global.brackets.config.extensions_url,
-                    global.brackets.config.extensions_dir);
-        }
+        path = ExtensionLoader.ensureServerSide(path);
 
         return _extensionManagerCall(function (extensionManager) {
             return extensionManager.remove(path);

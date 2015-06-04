@@ -258,7 +258,7 @@ define(function (require, exports, module) {
                 ViewCommandHandlers.restoreFontSize();
                 
                 var initialProjectPath;
-                if (brackets.inBrowser && params.get("project")) {
+                if (params.get("project")) {
                     initialProjectPath = params.get("project");
                 } else {
                     initialProjectPath = ProjectManager.getInitialProjectPath();
