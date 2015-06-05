@@ -190,7 +190,7 @@ define(function (require, exports, module) {
         _filesystemDomainCall(function (filesystemDomain) {
             filesystemDomain.move(oldPath, newPath)
                 .done(function (response) {
-                    if (response.err) {
+                    if (response && response.err) {
                         callback(response.err);
                     } else {
                         callback(null, null);
