@@ -202,7 +202,7 @@ define(function (require, exports, module) {
             paths: globalConfig,
             locale: brackets.getLocale()
         };
-        
+
         // Read optional requirejs-config.json
         var promise = _mergeConfig(extensionConfig).then(function (mergedConfig) {
             // Create new RequireJS context and load extension entry point

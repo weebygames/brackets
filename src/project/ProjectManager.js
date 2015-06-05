@@ -373,6 +373,16 @@ define(function (require, exports, module) {
     };
 
     /**
+     * See `ProjectModel.move`
+     */
+    ActionCreator.prototype.move = function (currPath, destPath) {
+        this.model.move(currPath, destPath)
+            .then(function(newPath) {
+                exports.refreshFileTree()
+            });
+    };
+
+    /**
      * See `ProjectModel.refresh`
      */
     ActionCreator.prototype.refresh = function () {

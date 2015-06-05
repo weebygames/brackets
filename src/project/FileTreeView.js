@@ -229,7 +229,7 @@ define(function (require, exports, module) {
             if (this.props.entry.get("rename")) {
                 return;
             }
-            e.preventDefault();
+            // e.preventDefault();
         }
     };
 
@@ -310,6 +310,23 @@ define(function (require, exports, module) {
             }
 
             return classes;
+        },
+
+        handleDragStart: function(e) {
+            e.dataTransfer.effectAllowed = "move";
+            e.dataTransfer.setData("path", this.myPath());
+            e.stopPropagation();
+        },
+
+        handleDragOver: function(e) {
+            e.preventDefault();
+        },
+
+        handleDrop: function(e) {
+            e.preventDefault();
+            var otherPath = e.dataTransfer.getData("path");
+            var thisPath = this.myPath();
+            this.props.actions.move(otherPath, thisPath);
         }
     };
 
@@ -477,7 +494,11 @@ define(function (require, exports, module) {
                 className: this.getClasses("jstree-leaf"),
                 onClick: this.handleClick,
                 onMouseDown: this.handleMouseDown,
-                onDoubleClick: this.handleDoubleClick
+                onDoubleClick: this.handleDoubleClick,
+                onDragStart: this.handleDragStart,
+                onDragOver: this.handleDragOver,
+                onDrop: this.handleDrop,
+                draggable: true
             },
                 DOM.ins({
                     className: "jstree-icon"
@@ -712,7 +733,11 @@ define(function (require, exports, module) {
             return DOM.li({
                 className: this.getClasses("jstree-" + nodeClass),
                 onClick: this.handleClick,
-                onMouseDown: this.handleMouseDown
+                onMouseDown: this.handleMouseDown,
+                onDragStart: this.handleDragStart,
+                draggable: true,
+                onDragOver: this.handleDragOver,
+                onDrop: this.handleDrop
             },
                 DOM.ins({
                     className: "jstree-icon"

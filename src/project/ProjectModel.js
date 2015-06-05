@@ -1096,7 +1096,42 @@ define(function (require, exports, module) {
             });
         }
     };
-    
+
+    /**
+     * Move the file at currPath to destPath
+     *
+     * @param  {string} currPath
+     * @param  {string} destPath
+     */
+    ProjectModel.prototype.move = function(currPath, destPath) {
+        var deferred = new $.Deferred();
+
+        if (_pathIsFile(destPath)) {
+            destPath = FileUtils.getDirectoryPath(destPath);
+        }
+
+        // Check for the src and dest directory being the same
+        if (FileUtils.comparePaths(FileUtils.getDirectoryPath(currPath), FileUtils.getDirectoryPath(destPath)) === 0) {
+            console.log('Cannot move to same directory');
+            deferred.reject('SAME_DIR');
+            return;
+        }
+
+        var newPath = destPath + FileUtils.getBaseName(currPath);
+
+        this.projectRoot._fileSystem._impl.rename(currPath, newPath, function(err) {
+            if (err) {
+                console.error('Error while moving currPath', err);
+                deferred.reject('FS_ERROR');
+                return;
+            }
+            console.log('Moved:', currPath);
+            deferred.resolve(newPath);
+        }.bind(this));
+
+        return deferred.promise();
+    };
+
     /**
      * Clears caches and refreshes the contents of the tree.
      *
