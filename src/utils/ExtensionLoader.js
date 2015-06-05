@@ -454,7 +454,8 @@ define(function (require, exports, module) {
                     "RecentProjects",
                     //"StaticServer",
                     "UrlCodeHints",
-                    "WebPlatformDocs"
+                    "WebPlatformDocs",
+                    "brackets-extension-jsio"
                 ];
             
             return Async.doInParallel(defaultExtensions, function (item) {
