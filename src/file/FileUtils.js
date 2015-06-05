@@ -535,6 +535,22 @@ define(function (require, exports, module) {
     };
 
     /**
+     * Get a url for static content using either file:// or the brackets shell static content server
+     *
+     * @param  {string} absPath
+     */
+    function getStaticUrl(absPath) {
+        if (absPath.indexOf('/') !== 0) {
+            absPath = '/' + absPath;
+        }
+
+        if (brackets.inBrowser) {
+            return window.location.protocol + '//brackets-' + window.location.host + '/static' + absPath;
+        }
+        return 'file://' + absPath;
+    }
+
+    /**
      * Useful for remote filesystems where the root directory is not '/'
      * Configure through global.brackets.config.server_fs_home
      *
@@ -594,4 +610,5 @@ define(function (require, exports, module) {
     exports.encodeFilePath                 = encodeFilePath;
     exports.ensureServerPath               = ensureServerPath;
     exports.ensureClientPath               = ensureClientPath;
+    exports.getStaticUrl                   = getStaticUrl;
 });

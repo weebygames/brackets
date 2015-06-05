@@ -28,11 +28,10 @@ maxerr: 50, browser: true */
 
 define(function (require, exports, module) {
     "use strict";
-    
+
     var EventDispatcher = require("utils/EventDispatcher");
-    
-    // var HOST = "localhost";
-    var HOST = 'brackets-' + window.location.host;
+
+    var HOST = window.location.hostname === "localhost" ? "localhost" : "brackets-" + window.location.host;
 
     /**
      * Connection attempts to make before failing

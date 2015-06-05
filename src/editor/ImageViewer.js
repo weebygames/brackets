@@ -51,9 +51,12 @@ define(function (require, exports, module) {
      */
     function ImageView(file, $container) {
         this.file = file;
-        this.$el = $(Mustache.render(ImageViewTemplate, {fullPath: FileUtils.encodeFilePath(file.fullPath),
+
+        var fullImagePath = FileUtils.encodeFilePath(file.fullPath);
+        fullImagePath = FileUtils.getStaticUrl(fullImagePath);
+        this.$el = $(Mustache.render(ImageViewTemplate, {fullPath: fullImagePath,
                                                          now: new Date().valueOf()}));
-        
+
         $container.append(this.$el);
 
         this._naturalWidth = 0;
