@@ -176,7 +176,12 @@ define(function (require, exports, module) {
         
         function handleDrop(event) {
             event = event.originalEvent || event;
-            
+
+            // If the drop happened on the sidebar, ignore
+            if ($.contains(sidebar, event.target)) {
+                return;
+            }
+
             var files = event.dataTransfer.files;
             if (files && files.length) {
                 event.stopPropagation();

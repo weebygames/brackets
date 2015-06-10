@@ -540,6 +540,8 @@ define(function (require, exports, module) {
      * @param  {string} absPath
      */
     function getStaticUrl(absPath) {
+        absPath = absPath || '';
+
         if (absPath.indexOf('/') !== 0) {
             absPath = '/' + absPath;
         }

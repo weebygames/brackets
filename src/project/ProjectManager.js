@@ -378,7 +378,7 @@ define(function (require, exports, module) {
     ActionCreator.prototype.move = function (currPath, destPath) {
         this.model.move(currPath, destPath)
             .then(function(newPath) {
-                exports.refreshFileTree()
+                exports.refreshFileTree();
             });
     };
 
@@ -387,6 +387,13 @@ define(function (require, exports, module) {
      */
     ActionCreator.prototype.refresh = function () {
         this.model.refresh();
+    };
+
+    /**
+     * See `ProjectManager.refreshFileTree`
+     */
+    ActionCreator.prototype.refreshFileTree = function () {
+        exports.refreshFileTree();
     };
 
     /**

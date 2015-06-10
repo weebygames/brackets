@@ -323,10 +323,44 @@ define(function (require, exports, module) {
         },
 
         handleDrop: function(e) {
+            e = e.originalEvent || e;
+
             e.preventDefault();
+            var files = event.dataTransfer.files;
+            if (files && files.length) {
+                e.stopPropagation();
+
+                var uploadDest = FileUtils.getDirectoryPath(this.myPath());
+                var actions = this.props.actions;
+
+                // Set up the http req
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", FileUtils.getStaticUrl(uploadDest), true);
+                xhr.withCredentials = true;
+                var formData = new FormData();
+
+                for (var i = 0; i < files.length; i++) {
+                    var file = files[i];
+                    formData.append("file_" + i, file);
+                }
+
+                xhr.onerror = function(e) {
+                    console.error('Error uploading files', e);
+                };
+                xhr.onload = function() {
+                    // Success, update the file tree
+                    actions.refreshFileTree();
+                };
+
+                xhr.send(formData);
+                return;
+            }
+
             var otherPath = e.dataTransfer.getData("path");
-            var thisPath = this.myPath();
-            this.props.actions.move(otherPath, thisPath);
+            if (otherPath) {
+                var thisPath = this.myPath();
+                this.props.actions.move(otherPath, thisPath);
+            }
         }
     };
 
