@@ -39,7 +39,7 @@ function _createHash(data) {
     hash.write(data);
     hash.end();
     return hash.read();
-};
+}
 
 function _makeBracketsStat(stats) {
     return {
@@ -48,7 +48,7 @@ function _makeBracketsStat(stats) {
         hash: _createHash('' + stats.mtime + stats.ctime + stats.birthtime + stats.size),
         size: stats.size,
     };
-};
+}
 
 function _cmdStat(path, callback) {
     fs.stat(path, function(err, stat) {
@@ -59,7 +59,7 @@ function _cmdStat(path, callback) {
 
         callback(null, _makeBracketsStat(stat));
     });
-};
+}
 
 function _cmdReadFile(path, callback) {
     _cmdStat(path, function(err, stat) {
@@ -80,7 +80,7 @@ function _cmdReadFile(path, callback) {
             });
         });
     });
-};
+}
 
 function _cmdWriteFile(path, data, options, callback) {
     var created = !fs.existsSync(path);
@@ -103,7 +103,7 @@ function _cmdWriteFile(path, data, options, callback) {
             });
         });
     });
-};
+}
 
 function _cmdReadDir(path, callback) {
     _cmdStat(path, function(err, stat) {
@@ -136,7 +136,7 @@ function _cmdReadDir(path, callback) {
 
         callback(null, results);
     });
-};
+}
 
 function _cmdMakeDir(path, mode, callback) {
     fs.mkdir(path, mode, function(err) {
@@ -146,7 +146,7 @@ function _cmdMakeDir(path, mode, callback) {
 
         _cmdStat(path, callback);
     });
-};
+}
 
 function _cmdMove(oldPath, newPath, callback) {
     fs.rename(oldPath, newPath, function(err) {
@@ -155,7 +155,7 @@ function _cmdMove(oldPath, newPath, callback) {
         }
         callback(null);
     });
-};
+}
 
 function _cmdUnlink(path, callback) {
     fs.unlink(path, function(err) {
@@ -164,10 +164,10 @@ function _cmdUnlink(path, callback) {
         }
         callback(null);
     });
-};
+}
 
 function _cmdVisit(path, callback) {
-     _cmdStat(path, function(err, stat) {
+    _cmdStat(path, function(err, stat) {
         if (stat.err) {
             callback(null, stat);
             return;
@@ -203,7 +203,7 @@ function _cmdVisit(path, callback) {
 
         callback(null, results);
     });
-};
+}
 
 /**
  * Initialize the "projects" domain.

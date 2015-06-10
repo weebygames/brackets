@@ -23,14 +23,13 @@
 
 
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, regexp: true, indent: 4, maxerr: 50 */
-/*global define, window, PathUtils */
+/*global define, window, PathUtils, WebDAV */
 
 // Requires configuring 'global.brackets.config.server_fs_home'
 define(function (require, exports, module) {
     "use strict";
 
     var FileSystemError = require("filesystem/FileSystemError"),
-        FileSystemStats = require("filesystem/FileSystemStats"),
         AjaxFileSystem  = require("filesystem/impls/demo/AjaxFileSystem");
 
 
@@ -46,15 +45,6 @@ define(function (require, exports, module) {
 
     function _startsWith(path, prefix) {
         return (path.substr(0, prefix.length) === prefix);
-    }
-
-    function _stripTrailingSlash(path) {
-        return path[path.length - 1] === "/" ? path.substr(0, path.length - 1) : path;
-    }
-
-    function _nameFromPath(path) {
-        var segments = _stripTrailingSlash(path).split("/");
-        return segments[segments.length - 1];
     }
 
     function _makeStat(webdavFile) {
@@ -204,7 +194,7 @@ define(function (require, exports, module) {
                 f = fs.file(path);
             } else if (typeof f === 'string') {
                 callback(f);
-                return
+                return;
             }
 
             f.write(data, function(data, status) {

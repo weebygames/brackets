@@ -28,14 +28,9 @@
 define(function (require, exports, module) {
     "use strict";
 
-    var FileSystemError = require("filesystem/FileSystemError"),
-        FileSystemStats = require("filesystem/FileSystemStats"),
-        AjaxFileSystem  = require("filesystem/impls/demo/AjaxFileSystem"),
-        AppInit         = require("utils/AppInit"),
+    var AjaxFileSystem  = require("filesystem/impls/demo/AjaxFileSystem"),
         NodeConnection  = require("utils/NodeConnection"),
-        FileUtils       = require("file/FileUtils"),
-        FileSystem      = require("filesystem/FileSystem"),
-        global          = require("utils/Global").global;
+        FileUtils       = require("file/FileUtils");
 
 
     // Brackets uses FileSystem to read from various internal paths that are not in the user's project storage. We
@@ -101,19 +96,12 @@ define(function (require, exports, module) {
         return (path.substr(0, prefix.length) === prefix);
     }
 
-    function _stripTrailingSlash(path) {
-        return path[path.length - 1] === "/" ? path.substr(0, path.length - 1) : path;
-    }
-
-    function _nameFromPath(path) {
-        var segments = _stripTrailingSlash(path).split("/");
-        return segments[segments.length - 1];
-    }
-
     function _parseStat(stat) {
-        stat.mtime && (stat.mtime = new Date(stat.mtime));
+        if (stat.mtime) {
+            stat.mtime = new Date(stat.mtime);
+        }
         return stat;
-    };
+    }
 
     function stat(path, callback) {
         if (_startsWith(path, CORE_EXTENSIONS_PREFIX)) {
@@ -269,7 +257,7 @@ define(function (require, exports, module) {
                     }
                 });
         });
-    };
+    }
 
     function moveToTrash(path, callback) {
         console.log("Trash file: " + path);

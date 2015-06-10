@@ -539,9 +539,6 @@ define(function (require, exports, module) {
         options.maxEntriesCounter = { value: options.maxEntries };
 
         if (this._fileSystem._impl.visit) {
-            var visitPath = this._path;
-            // visitPath = global.brackets.config.webdav_home + visitPath;
-
             var fs = this._fileSystem;
             fs._impl.visit(this._path, function(err, results) {
                 if (err) {

@@ -39,8 +39,7 @@ define(function (require, exports, module) {
         Strings              = require("strings"),
         ExtensionLoader      = require("utils/ExtensionLoader"),
         NodeConnection       = require("utils/NodeConnection"),
-        PreferencesManager   = require("preferences/PreferencesManager"),
-        global               = require("utils/Global").global;
+        PreferencesManager   = require("preferences/PreferencesManager");
     
     PreferencesManager.definePreference("proxy", "string", undefined);
     

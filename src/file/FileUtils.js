@@ -532,7 +532,7 @@ define(function (require, exports, module) {
             }
         }
         return path;
-    };
+    }
 
     /**
      * Get a url for static content using either file:// or the brackets shell static content server
@@ -565,7 +565,7 @@ define(function (require, exports, module) {
             return path.replace(regex, '');
         }
         return path;
-    };
+    }
 
     // Asynchronously load DocumentCommandHandlers
     // This avoids a temporary circular dependency created

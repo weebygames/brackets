@@ -21,7 +21,7 @@
  *
  */
 
-/*global define, $*/
+/*global define, $, XMLHttpRequest, FormData */
 /*unittests: FileTreeView*/
 
 /**
@@ -326,7 +326,7 @@ define(function (require, exports, module) {
             e = e.originalEvent || e;
 
             e.preventDefault();
-            var files = event.dataTransfer.files;
+            var files = e.dataTransfer.files;
             if (files && files.length) {
                 e.stopPropagation();
 

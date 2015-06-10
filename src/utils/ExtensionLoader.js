@@ -106,22 +106,6 @@ define(function (require, exports, module) {
     }
 
     /**
-     * In the case where the client is running in a browser (outside of the shell),
-     * extensions need to be referenced from both server and client side in different ways
-     *
-     * @param  {string} path
-     */
-    function ensureClientSide(path) {
-        if (brackets.inBrowser) {
-            // Only want to replace the path if it is at the start
-            var re = new RegExp('^' + exports.getUserExtensionPath(true));
-            path = path.replace(re, exports.getUserExtensionPath(false));
-        }
-
-        return FileUtils.convertWindowsPathToUnixPath(path);
-    }
-
-    /**
      * Returns the require.js require context used to load an extension
      *
      * @param {!string} name, used to identify the extension

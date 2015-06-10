@@ -29,14 +29,6 @@ indent: 4, maxerr: 50 */
 
 var walkdir = require('walkdir');
 
-var Errors = {
-    CANCELED: "CANCELED"
-};
-
-var Statuses = {
-    FAILED: "FAILED"
-};
-
 function _cmdVisit(path, callback) {
     var results = [];
 
