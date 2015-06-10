@@ -47,7 +47,7 @@ module.exports = function (grunt) {
         auto_install: {
             filesystem: {
                 options: {
-                    cwd: 'src/filesystem/node',
+                    cwd: 'src/filesystem/impls/remoteNodeServer/node',
                     stdout: true,
                     stderr: true,
                     failOnError: true,

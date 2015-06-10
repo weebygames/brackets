@@ -1,9 +1,0 @@
-{
-  "name": "brackets-filesystem",
-  "description": "Used for optimized network filesystem requests",
-  "version": "1.0.0",
-  "dependencies": {
-    "walkdir": "0.0.9"
-  },
-  "devDependencies": {}
-}

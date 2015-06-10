@@ -59,7 +59,7 @@ define(function (require, exports, module) {
         if (!_nodeConnection) {
             _nodeConnection = new NodeConnection();
             _nodeConnection.connect(true).then(function () {
-                var domainPath = FileUtils.getBracketsHome() + "/" + FileUtils.getNativeModuleDirectoryPath(module) + "/node/RemoteFilesystemDomain";
+                var domainPath = FileUtils.getBracketsHome() + "/" + FileUtils.getNativeModuleDirectoryPath(module) + "/node/RemoteFileSystemDomain";
 
                 _nodeConnection.loadDomains(domainPath, true)
                     .then(
