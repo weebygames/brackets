@@ -31,3 +31,6 @@
 [submodule "src/extensions/default/brackets-extension-jsio"]
 	path = src/extensions/default/brackets-extension-jsio
 	url = https://github.com/weebygames/brackets-extension-jsio
+[submodule "src/extensions/default/brackets-jshint"]
+	path = src/extensions/default/brackets-jshint
+	url = https://github.com/weebygames/brackets-jshint

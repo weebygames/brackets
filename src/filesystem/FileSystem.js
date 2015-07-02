@@ -486,7 +486,12 @@ define(function (require, exports, module) {
      * @return {!string}
      */
     FileSystem.prototype._normalizePath = function (path, isDirectory) {
-        
+
+        var bracketsConfigMarker = '/$.brackets.config$/';
+        if (path.indexOf(bracketsConfigMarker) >= 0 && brackets.config.brackets_config_dir) {
+            path = path.replace(bracketsConfigMarker, brackets.config.brackets_config_dir + '/');
+        }
+
         if (!FileSystem.isAbsolutePath(path)) {
             throw new Error("Paths must be absolute: '" + path + "'");  // expect only absolute paths
         }

@@ -23,6 +23,7 @@
         "build_timestamp"            : "",
         "healthDataServerURL"        : "https://health.brackets.io/healthDataLog",
 
+        "brackets_config_dir": "/home/weeby/projects",
         "extensions_url": "/brackets_extensions",
         "extensions_dir": "/home/weeby/projects/brackets_extensions",
         "brackets_home": "/home/weeby/dev/brackets",

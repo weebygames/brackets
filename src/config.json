@@ -24,6 +24,7 @@
         "extensions_url": "/brackets_extensions",
         "extensions_dir": "/home/weeby/projects/brackets_extensions",
         "brackets_home": "/home/weeby/dev/brackets",
+        "brackets_config_dir": "/home/weeby/projects",
 
         "JavaScriptCodeHints": {
             "default_excluded_directories": "^build$|^resources$|^examples$|^node_modules$|modules\\/.*?\\/node_modules\\/.*?\\/node_modules|devkit-core",
