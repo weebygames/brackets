@@ -180,6 +180,10 @@ function _cmdVisit(path, options, callback) {
     }
     if (options.dir) {
         if (options.dir.path) options.dir.path = new RegExp(options.dir.path);
+        // No trailing slash
+        if (options.dir.relative && options.dir.relative.lastIndexOf('/') === options.dir.relative.length - 1) {
+            options.dir.relative = options.dir.relative.substring(0, options.dir.relative.length - 1);
+        }
     }
 
     var walkOpts = {
