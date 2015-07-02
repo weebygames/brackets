@@ -456,7 +456,8 @@ define(function (require, exports, module) {
                     "UrlCodeHints",
                     "WebPlatformDocs",
                     "brackets-extension-jsio",
-                    "brackets-jshint"
+                    "brackets-jshint",
+                    "brackets-trailingspaces"
                 ];
             
             return Async.doInParallel(defaultExtensions, function (item) {

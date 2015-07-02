@@ -34,3 +34,6 @@
 [submodule "src/extensions/default/brackets-jshint"]
 	path = src/extensions/default/brackets-jshint
 	url = https://github.com/weebygames/brackets-jshint
+[submodule "src/extensions/default/brackets-trailingspaces"]
+	path = src/extensions/default/brackets-trailingspaces
+	url = https://github.com/weebygames/brackets-trailingspaces
