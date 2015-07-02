@@ -89,7 +89,11 @@ define(function (require, exports, module) {
             files = builtinFiles,
             library;
 
+        var ignoreDefs = PreferencesManager.get("tern.ignoreDefs") || [];
+
         files.forEach(function (i) {
+            if (ignoreDefs.indexOf(i) >= 0) { return; }
+
             FileSystem.resolve(path + i, function (err, file) {
                 if (!err) {
                     FileUtils.readAsText(file).done(function (text) {
