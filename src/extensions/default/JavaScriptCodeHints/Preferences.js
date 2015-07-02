@@ -66,7 +66,8 @@
 define(function (require, exports, module) {
     "use strict";
 
-    var StringUtils      = brackets.getModule("utils/StringUtils");
+    var StringUtils      = brackets.getModule("utils/StringUtils"),
+        global           = brackets.getModule("utils/Global").global;
 
     /**
      *  Convert an array of strings with optional wildcards, to an equivalent
@@ -145,13 +146,15 @@ define(function (require, exports, module) {
      * @param {Object=} prefs - preference object
      */
     function Preferences(prefs) {
+        var config = global.brackets.config.JavaScriptCodeHints;
+
         var BASE_EXCLUDED_DIRECTORIES = null, /* if the user has settings, we don't exclude anything by default */
             // exclude node_modules for performance reasons and because we don't do full hinting for those anyhow.
-            DEFAULT_EXCLUDED_DIRECTORIES = /node_modules/,
+            DEFAULT_EXCLUDED_DIRECTORIES = new RegExp(config.default_excluded_directories),
             // exclude require and jquery since we have special knowledge of those
-            BASE_EXCLUDED_FILES = /^require.*\.js$|^jquery.*\.js$/,
-            DEFAULT_MAX_FILE_COUNT = 100,
-            DEFAULT_MAX_FILE_SIZE = 512 * 1024;
+            BASE_EXCLUDED_FILES = new RegExp(config.base_excluded_files),
+            DEFAULT_MAX_FILE_COUNT = config.default_max_file_count,
+            DEFAULT_MAX_FILE_SIZE = config.defualt_max_file_size;
 
         if (prefs) {
             this._excludedDirectories = settingsToRegExp(prefs["excluded-directories"],

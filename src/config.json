@@ -23,7 +23,14 @@
         "healthDataServerURL": "https://health.brackets.io/healthDataLog",
         "extensions_url": "/brackets_extensions",
         "extensions_dir": "/home/weeby/projects/brackets_extensions",
-        "brackets_home": "/home/weeby/dev/brackets"
+        "brackets_home": "/home/weeby/dev/brackets",
+
+        "JavaScriptCodeHints": {
+            "default_excluded_directories": "node_modules",
+            "base_excluded_files": "^require.*\\.js$|^jquery.*\\.js$",
+            "default_max_file_count": 100,
+            "defualt_max_file_size": 524288
+        }
     },
     "name": "Brackets",
     "version": "1.4.0-0",
