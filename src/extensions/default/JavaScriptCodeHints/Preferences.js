@@ -66,8 +66,10 @@
 define(function (require, exports, module) {
     "use strict";
 
-    var StringUtils      = brackets.getModule("utils/StringUtils"),
-        global           = brackets.getModule("utils/Global").global;
+    var StringUtils          = brackets.getModule("utils/StringUtils"),
+        PreferencesManager   = brackets.getModule("preferences/PreferencesManager"),
+        ProjectManager       = brackets.getModule("project/ProjectManager"),
+        pm                   = PreferencesManager.getExtensionPrefs("JavaScriptCodeHints");
 
     /**
      *  Convert an array of strings with optional wildcards, to an equivalent
@@ -146,15 +148,19 @@ define(function (require, exports, module) {
      * @param {Object=} prefs - preference object
      */
     function Preferences(prefs) {
-        var config = global.brackets.config.JavaScriptCodeHints;
+        // Define the defaults
+        pm.definePreference("excluded_directories", "string", "node_modules");
+        pm.definePreference("excluded_files", "string", "^require.*\\.js$|^jquery.*\\.js$");
+        pm.definePreference("max_file_count", "number", 100);
+        pm.definePreference("max_file_size", "number", 512 * 1024);
 
         var BASE_EXCLUDED_DIRECTORIES = null, /* if the user has settings, we don't exclude anything by default */
             // exclude node_modules for performance reasons and because we don't do full hinting for those anyhow.
-            DEFAULT_EXCLUDED_DIRECTORIES = new RegExp(config.default_excluded_directories),
+            DEFAULT_EXCLUDED_DIRECTORIES = new RegExp(pm.get("excluded_directories")),
             // exclude require and jquery since we have special knowledge of those
-            BASE_EXCLUDED_FILES = new RegExp(config.base_excluded_files),
-            DEFAULT_MAX_FILE_COUNT = config.default_max_file_count,
-            DEFAULT_MAX_FILE_SIZE = config.defualt_max_file_size;
+            BASE_EXCLUDED_FILES = new RegExp(pm.get("excluded_files")),
+            DEFAULT_MAX_FILE_COUNT = pm.get("max_file_count"),
+            DEFAULT_MAX_FILE_SIZE = pm.get("max_file_size");
 
         if (prefs) {
             this._excludedDirectories = settingsToRegExp(prefs["excluded-directories"],
