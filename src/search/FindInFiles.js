@@ -588,20 +588,21 @@ define(function (require, exports, module) {
                     }
                 },
                 function (err) {
-                if (err) {
-                    deferred.reject(err);
-                    return;
-                }
+                    if (err) {
+                        deferred.reject(err);
+                        return;
+                    }
 
-                // find additional matches in all added files
-                Async.doInParallel(addedFiles, function (file) {
-                    return _doSearchInOneFile(file)
-                        .done(function (foundMatches) {
-                            resultsChanged = resultsChanged || foundMatches;
-                        });
-                }).always(deferred.resolve);
-            });
-    
+                    // find additional matches in all added files
+                    Async.doInParallel(addedFiles, function (file) {
+                        return _doSearchInOneFile(file)
+                            .done(function (foundMatches) {
+                                resultsChanged = resultsChanged || foundMatches;
+                            });
+                    }).always(deferred.resolve);
+                }
+            );
+
             return deferred.promise();
         }
         

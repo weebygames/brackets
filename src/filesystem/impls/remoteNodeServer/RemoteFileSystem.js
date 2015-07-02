@@ -65,7 +65,7 @@ define(function (require, exports, module) {
                 _nodeConnection.loadDomains(domainPath, true)
                     .then(
                         function () {
-                            if (VERBOSE) console.log("[FileSystem] Connection established!");
+                            if (VERBOSE) { console.log("[FileSystem] Connection established!"); }
                             _nodeConnectionDeferred.resolve();
                         },
                         function () { // Failed to connect
@@ -153,7 +153,7 @@ define(function (require, exports, module) {
     }
 
     function mkdir(path, mode, callback) {
-        if (VERBOSE) console.log("Make directory: " + path + " [mode " + mode + "]");
+        if (VERBOSE) { console.log("Make directory: " + path + " [mode " + mode + "]"); }
 
         if (typeof mode === "function") {
             callback = mode;
@@ -174,7 +174,7 @@ define(function (require, exports, module) {
     }
 
     function rename(oldPath, newPath, callback) {
-        if (VERBOSE) console.log("Rename file: " + oldPath + " -> " + newPath);
+        if (VERBOSE) { console.log("Rename file: " + oldPath + " -> " + newPath); }
 
         _filesystemDomainCall(function (filesystemDomain) {
             filesystemDomain.move(oldPath, newPath)
@@ -194,12 +194,12 @@ define(function (require, exports, module) {
         }
 
         if (_startsWith(path, CORE_EXTENSIONS_PREFIX)) {
-            if (VERBOSE) console.log("Ajax load: " + path);
+            if (VERBOSE) { console.log("Ajax load: " + path); }
             AjaxFileSystem.readFile(path, callback);
             return;
         }
 
-        if (VERBOSE) console.log("Reading 'file': " + path);
+        if (VERBOSE) { console.log("Reading 'file': " + path); }
         _filesystemDomainCall(function (filesystemDomain) {
             filesystemDomain.readFile(path)
                 .done(function (response) {
@@ -215,7 +215,7 @@ define(function (require, exports, module) {
 
 
     function writeFile(path, data, options, callback) {
-        if (VERBOSE) console.log("Write file: " + path + " [length " + data.length + "]");
+        if (VERBOSE) { console.log("Write file: " + path + " [length " + data.length + "]"); }
 
         _filesystemDomainCall(function (filesystemDomain) {
             filesystemDomain.writeFile(path, data, options)
@@ -231,7 +231,7 @@ define(function (require, exports, module) {
     }
 
     function unlink(path, callback) {
-        if (VERBOSE) console.log("Unlink: " + path);
+        if (VERBOSE) { console.log("Unlink: " + path); }
 
         _filesystemDomainCall(function (filesystemDomain) {
             filesystemDomain.unlink(path)
@@ -245,7 +245,7 @@ define(function (require, exports, module) {
         });
     }
 
-    var reToString = function(re) {
+    function reToString(re) {
         var s = re.toString();
         return s.substring(1, s.length - 1);
     }
@@ -270,7 +270,7 @@ define(function (require, exports, module) {
      * @param  {Function} callback
      */
     function visit(path, options, callback) {
-        if (VERBOSE) console.log("Visit: " + path);
+        if (VERBOSE) { console.log("Visit: " + path); }
         // Optional options argument
         if (typeof options === 'function') {
             callback = options;
@@ -279,14 +279,14 @@ define(function (require, exports, module) {
 
         // Serialize the regexps
         if (options.all) {
-            if (options.all.name) options.all.name = reToString(options.all.name);
-            if (options.all.path) options.all.path = reToString(options.all.path);
+            if (options.all.name) { options.all.name = reToString(options.all.name); }
+            if (options.all.path) { options.all.path = reToString(options.all.path); }
         }
         if (options.file) {
-            if (options.file.name) options.file.name = reToString(options.file.name);
+            if (options.file.name) { options.file.name = reToString(options.file.name); }
         }
         if (options.dir) {
-            if (options.dir.path) options.dir.path = reToString(options.dir.path);
+            if (options.dir.path) { options.dir.path = reToString(options.dir.path); }
         }
 
         _filesystemDomainCall(function (filesystemDomain) {
@@ -302,7 +302,7 @@ define(function (require, exports, module) {
     }
 
     function moveToTrash(path, callback) {
-        if (VERBOSE) console.log("Trash file: " + path);
+        if (VERBOSE) { console.log("Trash file: " + path); }
 
         // TODO: Fix this
         console.warn('TODO: Currently an alias for unlink');

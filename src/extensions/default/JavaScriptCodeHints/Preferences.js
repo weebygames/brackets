@@ -68,7 +68,6 @@ define(function (require, exports, module) {
 
     var StringUtils          = brackets.getModule("utils/StringUtils"),
         PreferencesManager   = brackets.getModule("preferences/PreferencesManager"),
-        ProjectManager       = brackets.getModule("project/ProjectManager"),
         pm                   = PreferencesManager.getExtensionPrefs("JavaScriptCodeHints");
 
     /**

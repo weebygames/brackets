@@ -172,14 +172,14 @@ function _cmdVisit(path, options, callback) {
 
     // Reconstruct any of the regexp
     if (options.all) {
-        if (options.all.path) options.all.path = new RegExp(options.all.path);
-        if (options.all.name) options.all.name = new RegExp(options.all.name);
+        if (options.all.path) { options.all.path = new RegExp(options.all.path); }
+        if (options.all.name) { options.all.name = new RegExp(options.all.name); }
     }
     if (options.file) {
-        if (options.file.name) options.file.name = new RegExp(options.file.name);
+        if (options.file.name) { options.file.name = new RegExp(options.file.name); }
     }
     if (options.dir) {
-        if (options.dir.path) options.dir.path = new RegExp(options.dir.path);
+        if (options.dir.path) { options.dir.path = new RegExp(options.dir.path); }
         // No trailing slash
         if (options.dir.relative && options.dir.relative.lastIndexOf('/') === options.dir.relative.length - 1) {
             options.dir.relative = options.dir.relative.substring(0, options.dir.relative.length - 1);
@@ -267,7 +267,7 @@ function _cmdVisit(path, options, callback) {
         emitter.on('end', function() {
             visitsComplete++;
             // console.log('visits complete', visitsComplete, '/', visitCount);
-            if (visitsComplete == visitCount) {
+            if (visitsComplete === visitCount) {
                 callback(null, results);
             }
         });

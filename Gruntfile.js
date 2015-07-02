@@ -321,7 +321,8 @@ module.exports = function (grunt) {
             test:   '<%= meta.test %>',
             /* use strict options to mimic JSLINT until we migrate to JSHINT in Brackets */
             options: {
-                jshintrc: '.jshintrc'
+                jshintrc: '.jshintrc',
+                jshintignore: '.jshintignore'
             }
         },
         shell: {
