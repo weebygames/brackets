@@ -197,7 +197,7 @@ define(function (require, exports, module) {
     function loadExtensionModule(name, config, entryPoint) {
         var extensionConfig = {
             context: name,
-            baseUrl: config.baseUrl,
+            baseUrl: ensureClientSide(config.baseUrl),
             /* FIXME (issue #1087): can we pass this from the global require context instead of hardcoding twice? */
             paths: globalConfig,
             locale: brackets.getLocale()
