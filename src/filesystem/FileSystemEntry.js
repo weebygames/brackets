@@ -513,7 +513,7 @@ define(function (require, exports, module) {
      * @param {function(FileSystemEntry): boolean} visitor - A visitor function, which is
      *      applied to this entry and all descendent FileSystemEntry objects. If the function returns
      *      false for a particular Directory entry, that directory's descendents will not be visited.
-     * @param {{maxDepth: number=, maxEntries: number=}=} options
+     * @param {{maxDepth: number=, maxEntries: number=, serverSideVisi: object=}=} options
      * @param {function(?string)=} callback Callback with single FileSystemError string parameter.
      */
     FileSystemEntry.prototype.visit = function (visitor, options, callback) {
@@ -538,15 +538,19 @@ define(function (require, exports, module) {
 
         options.maxEntriesCounter = { value: options.maxEntries };
 
-        if (this._fileSystem._impl.visit) {
+        if (options.serverSideVisit && this._fileSystem._impl.visit) {
+            // visit
             var fs = this._fileSystem;
-            fs._impl.visit(this._path, function(err, results) {
+            var visitPath = this.fullPath;
+            console.log('Running server side visit:', visitPath, options.serverSideVisit);
+
+            fs._impl.visit(visitPath, options.serverSideVisit, function(err, results) {
                 if (err) {
                     callback(err);
                     return;
                 }
 
-                console.log('results count: ', results.length);
+                console.log('> results count: ', results.length);
                 for (var i = 0; i < results.length; i++) {
                     var res = results[i];
 

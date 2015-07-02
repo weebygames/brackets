@@ -1450,6 +1450,7 @@ define(function (require, exports, module) {
     exports.isWithinProject               = isWithinProject;
     exports.makeProjectRelativeIfPossible = makeProjectRelativeIfPossible;
     exports.shouldShow                    = ProjectModel.shouldShow;
+    exports.getExclusionRegex             = ProjectModel.getExclusionRegex;
     exports.openProject                   = openProject;
     exports.getSelectedItem               = getSelectedItem;
     exports.getContext                    = getContext;

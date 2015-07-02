@@ -166,43 +166,110 @@ function _cmdUnlink(path, callback) {
     });
 }
 
-function _cmdVisit(path, callback) {
-    _cmdStat(path, function(err, stat) {
-        if (stat.err) {
-            callback(null, stat);
-            return;
+function _cmdVisit(path, options, callback) {
+    // The problem with this function is that many of the visitor functions assume the visit will happen breadth first.
+    // In some cases the user may want to specify depth, but for now it is just defaulted to 1
+
+    // Reconstruct any of the regexp
+    if (options.all) {
+        if (options.all.path) options.all.path = new RegExp(options.all.path);
+        if (options.all.name) options.all.name = new RegExp(options.all.name);
+    }
+    if (options.file) {
+        if (options.file.name) options.file.name = new RegExp(options.file.name);
+    }
+    if (options.dir) {
+        if (options.dir.path) options.dir.path = new RegExp(options.dir.path);
+    }
+
+    var walkOpts = {
+        follow_symlinks: true, // default is off
+        no_recurse: false,      // only recurse one level deep
+        max_depth: 1
+    };
+    var maxFileCount = options.all.maxFileCount || 500;
+    var results = [];
+
+    var visitCount = 0;
+    var visitsComplete = 0;
+
+    // Filter out files or folders
+    var ignorePattern = /\/\..*/;
+    var visit = function(path, isDir) {
+        var name = _path.basename(path);
+
+        if (isDir && results.length >= maxFileCount) { return false; }
+
+        // All
+        if (options.all) {
+            if (options.all.path && path.match(options.all.path)) { return false; }
+            if (options.all.name && name.match(options.all.name)) { return false; }
+            if (options.all.dotFiles && name.indexOf('.') === 0) { return false; }
         }
-        var results = [];
+        // File
+        if (options.file && !isDir) {
+            if (options.file.name && name.match(options.file.name)) { return false; }
+            if (options.file.exactPath && options.file.exactPath.indexOf(path) >= 0) { return false; }
+            if (options.file.ext && _path.extname(name) !== options.file.ext) { return false; }
+        }
+        // Folder
+        if (options.dir && isDir) {
+            var relativePath = path;
+            if (options.dir.relative && relativePath.indexOf(options.dir.relative) === 0) {
+                relativePath = relativePath.substring(options.dir.relative.length + 1, relativePath.length);
+            }
+            // no trailing slash
+            if (relativePath.lastIndexOf('/') === relativePath.length - 1) {
+                relativePath = relativePath.substring(0, relativePath.length - 1);
+            }
+            if (options.dir.path && relativePath.match(options.dir.path)) { return false; }
+        }
 
-        var opts = {
-            follow_symlinks: true, // default is off
-            no_recurse: false,      // only recurse one level deep
-            max_depth: 10
-        };
+        if (path.match(ignorePattern)) {
+            return false;
+        }
 
-        var ignorePattern = /\/\..*/;
+        return true;
+    };
 
-        walkdir.sync(path, opts, function(path, stat) {
-            // var filePath = path.join(dirPath, fileName);
 
-            if (path.match(ignorePattern)) {
+    var visitHelper = function(path) {
+        visitCount++;
+        // console.log('visit ct', visitCount, path);
+
+        var emitter = walkdir(path, walkOpts);
+
+        emitter.on('file', function(path, stat) {
+            if (!visit(path, false)) {
                 return;
             }
 
-            var type = '';
-            if (stat.isDirectory()) {
-                type = 'dir';
-            } else if (stat.isFile()) {
-                type = 'file';
-            } else {
-                return;
-            }
-
-            results.push({ path: path, type: type });
+            results.push({ path: path, type: 'file' });
         });
 
-        callback(null, results);
-    });
+        emitter.on('directory', function(path, stat) {
+            if (!visit(path, true)) {
+                return;
+            }
+
+            results.push({ path: path, type: 'dir' });
+            visitHelper(path);
+        });
+
+        emitter.on('error', function(path, err) {
+            callback(null, {err: err.code});
+        });
+
+        emitter.on('end', function() {
+            visitsComplete++;
+            // console.log('visits complete', visitsComplete, '/', visitCount);
+            if (visitsComplete == visitCount) {
+                callback(null, results);
+            }
+        });
+    };
+
+    visitHelper(path);
 }
 
 /**
@@ -367,6 +434,10 @@ function init(domainManager) {
             name: "path",
             type: "string",
             description: "absolute filesystem path"
+        },{
+            name: "options",
+            type: "object",
+            description: "options for filtering"
         }],
         {
             name: "results",

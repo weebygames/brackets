@@ -989,7 +989,7 @@ define(function (require, exports, module) {
     
             return stopAddingFiles;
         }
-            
+
         /**
          *  Add the files in the directory and subdirectories of a given directory
          *  to tern.
@@ -1011,20 +1011,41 @@ define(function (require, exports, module) {
                             !stopAddingFiles;
                     }
                 }
-                
+
                 if (err) {
                     return;
                 }
-                
+
                 if (dir === FileSystem.getDirectoryForPath(rootTernDir)) {
                     doneCallback();
                     return;
                 }
-                
-                directory.visit(visitor, doneCallback);
+
+                var maxFileCount = preferences.getMaxFileCount();
+                var availableFileCount = maxFileCount - numResolvedFiles - numAddedFiles;
+                var detectedExclusions = PreferencesManager.get("jscodehints.detectedExclusions");
+                directory.visit(
+                    visitor,
+                    { serverSideVisit: {
+                        file: {
+                            ext: '.js',
+                            name: preferences.getExcludedFiles(),
+                            exactPath: detectedExclusions
+                        },
+                        dir: {
+                            path: preferences.getExcludedDirectories(), // relative, no trailing slash
+                            relative: ProjectManager.getProjectRoot().fullPath
+                        },
+                        all: {
+                            dotFiles: true,
+                            maxFileCount: availableFileCount
+                        }
+                    } },
+                    doneCallback
+                );
             });
         }
-            
+
         /**
          * Init the web worker that does all the code hinting work.
          *

@@ -110,6 +110,15 @@ define(function (require, exports, module) {
         return _shouldShowName(entry.name);
     }
 
+    /**
+     * Returns a duplicate of the exclusion list used to test entry.name in file visits
+     *
+     * @return {RegExp}
+     */
+    function getExclusionRegex() {
+        return new RegExp(_exclusionListRegEx);
+    }
+
     // Constants used by the ProjectModel
 
     var FILE_RENAMING     = 0,
@@ -426,19 +435,27 @@ define(function (require, exports, module) {
                 };
 
             this._allFilesCachePromise = deferred.promise();
-            
+
             var projectIndexTimer = PerfUtils.markStart("Creating project files cache: " +
                                                         this.projectRoot.fullPath);
 
-            this.projectRoot.visit(allFilesVisitor, function (err) {
-                if (err) {
-                    PerfUtils.finalizeMeasurement(projectIndexTimer);
-                    deferred.reject(err);
-                } else {
-                    PerfUtils.addMeasurement(projectIndexTimer);
-                    deferred.resolve(allFiles);
-                }
-            }.bind(this));
+            this.projectRoot.visit(
+                allFilesVisitor,
+                {
+                    serverSideVisit: {
+                        all: { name: getExclusionRegex() }
+                    }
+                },
+                function (err) {
+                    if (err) {
+                        PerfUtils.finalizeMeasurement(projectIndexTimer);
+                        deferred.reject(err);
+                    } else {
+                        PerfUtils.addMeasurement(projectIndexTimer);
+                        deferred.resolve(allFiles);
+                    }
+                }.bind(this)
+            );
         }
 
         return this._allFilesCachePromise;
@@ -1370,6 +1387,7 @@ define(function (require, exports, module) {
     exports._invalidChars           = _invalidChars;
 
     exports.shouldShow              = shouldShow;
+    exports.getExclusionRegex       = getExclusionRegex;
     exports.isValidFilename         = isValidFilename;
     exports.EVENT_CHANGE            = EVENT_CHANGE;
     exports.EVENT_SHOULD_SELECT     = EVENT_SHOULD_SELECT;

@@ -579,13 +579,20 @@ define(function (require, exports, module) {
                 }
                 return false;
             };
-    
-            entry.visit(visitor, function (err) {
+
+            entry.visit(
+                visitor,
+                {
+                    serverSideVisit: {
+                        all: { name: ProjectManager.getExclusionRegex() }
+                    }
+                },
+                function (err) {
                 if (err) {
                     deferred.reject(err);
                     return;
                 }
-                
+
                 // find additional matches in all added files
                 Async.doInParallel(addedFiles, function (file) {
                     return _doSearchInOneFile(file)
