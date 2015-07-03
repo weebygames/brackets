@@ -43,3 +43,6 @@
 [submodule "src/extensions/default/brackets-working-file-tabs"]
 	path = src/extensions/default/brackets-working-file-tabs
 	url = https://github.com/demonmhon/brackets-working-file-tabs
+[submodule "src/extensions/default/brackets-display-shortcuts"]
+	path = src/extensions/default/brackets-display-shortcuts
+	url = https://github.com/redmunds/brackets-display-shortcuts

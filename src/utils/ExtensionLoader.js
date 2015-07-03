@@ -460,7 +460,8 @@ define(function (require, exports, module) {
                     "brackets-jshint",
                     "brackets-trailingspaces",
                     "brackets-working-file-tabs",
-                    "popup-menu-extension"
+                    "popup-menu-extension",
+                    "brackets-display-shortcuts"
                 ];
             
             return Async.doInParallel(defaultExtensions, function (item) {
