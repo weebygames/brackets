@@ -455,9 +455,12 @@ define(function (require, exports, module) {
                     //"StaticServer",
                     "UrlCodeHints",
                     "WebPlatformDocs",
+
                     "brackets-extension-jsio",
                     "brackets-jshint",
-                    "brackets-trailingspaces"
+                    "brackets-trailingspaces",
+                    "brackets-working-file-tabs",
+                    "popup-menu-extension"
                 ];
             
             return Async.doInParallel(defaultExtensions, function (item) {

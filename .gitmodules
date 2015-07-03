@@ -37,3 +37,9 @@
 [submodule "src/extensions/default/brackets-trailingspaces"]
 	path = src/extensions/default/brackets-trailingspaces
 	url = https://github.com/weebygames/brackets-trailingspaces
+[submodule "src/extensions/default/popup-menu-extension"]
+	path = src/extensions/default/popup-menu-extension
+	url = https://github.com/Denisov21/Popup-menu-extension
+[submodule "src/extensions/default/brackets-working-file-tabs"]
+	path = src/extensions/default/brackets-working-file-tabs
+	url = https://github.com/demonmhon/brackets-working-file-tabs
