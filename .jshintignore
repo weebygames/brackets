@@ -1,3 +1,6 @@
 src/extensions/default/brackets-jshint/**
 src/extensions/default/brackets-trailingspaces/**
+src/extensions/default/popup-menu-extension/**
+src/extensions/default/brackets-working-file-tabs/**
+src/extensions/default/brackets-display-shortcuts/**
 
