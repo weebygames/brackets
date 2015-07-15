@@ -1728,6 +1728,12 @@ define(function (require, exports, module) {
             console.log("Brackets reloaded with extensions disabled");
         }
 
+        if (brackets.inBrowser) {
+            $(window).on('beforeunload', function(e) {
+                _handleWindowGoingAway();
+            });
+        }
+
         // Init DOM elements
         _$titleContainerToolbar = $("#titlebar");
         _$titleWrapper = $(".title-wrapper", _$titleContainerToolbar);
