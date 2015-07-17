@@ -409,15 +409,18 @@ define(function (require, exports, module) {
                     isUpdating: false,
                     needsUpdate: true,
 
-                    pathState: null
+                    pathState: null,
+                    selectedItem: null
                 };
             },
 
             render: function() {
                 if (this.state.needsUpdate) {
                     this.state.needsUpdate = false;
-                    this.updateContents();
+                    setTimeout(this.updateContents, 0);
                 }
+
+                var validSelection = this.state.selectedItem && this.state.selectedItem.isFile !== chooseDirectories;
 
                 return React.DOM.div({}, [
                     pathInput({
@@ -432,7 +435,8 @@ define(function (require, exports, module) {
                         type: 'button',
                         value: 'open',
                         'data-button-id': 'open:' + encodeURI(this.props.path),
-                        className: 'dialog-button'
+                        className: 'dialog-button',
+                        disabled: !validSelection
                     }),
                     React.DOM.input({
                         type: 'button',
@@ -484,8 +488,10 @@ define(function (require, exports, module) {
                 this.state.isUpdating = true;
 
                 var lookupPath = FileUtils.stripTrailingSlash(this.props.path);
+                this.setState({ pathState: 'loading' });
 
                 stat(lookupPath, function(err, stat) {
+                    this.setState({ selectedItem: stat });
                     if (err) {
                         console.error('Error while getting stat', err);
                         this.setState({ pathState: 'error' });
@@ -493,7 +499,6 @@ define(function (require, exports, module) {
                         return;
                     }
 
-                    this.setState({ pathState: 'loading' });
                     if (!stat.isFile) {
                         readdir(lookupPath, function(err, names, stats) {
                             this.state.isUpdating = false;
@@ -507,11 +512,6 @@ define(function (require, exports, module) {
                                 stats[i].path = lookupPath + '/' + names[i];
                                 stats[i].name = names[i];
                             }
-
-                            // Filter the results
-                            stats = stats.filter(function(item) {
-                                return item.isFile !== chooseDirectories;
-                            });
 
                             // Add the ".."
                             var parentPath = FileUtils.getParentPath(lookupPath);
@@ -527,6 +527,7 @@ define(function (require, exports, module) {
                             this.setProps({ items: stats });
                         }.bind(this));
                     } else {
+                        this.setState({ pathState: 'good' });
                         this.state.isUpdating = false;
                     }
                 }.bind(this));
