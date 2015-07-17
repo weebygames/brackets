@@ -2168,3 +2168,50 @@ label input {
     min-height: 300px;
     max-height: 300px;
 }
+
+// In browser modals
+.open-file-modal-container {
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    min-width: 300px;
+    width: 50%;
+    height: 100%;
+    padding-top: 35px;
+
+    font-size: 14px;
+
+    ul {
+        list-style-type: none;
+    }
+
+    .item {
+        cursor: pointer;
+
+        &.dir {
+            color: #7AEDED;
+        }
+
+        &.file {
+        }
+    }
+
+    input[type="text"] {
+        width: 95%;
+
+        &.good {
+            background-color: #3D543C;
+        }
+        &.loading {
+            background-color: #3C5454;
+        }
+        &.error {
+            background-color: #543C3C;
+        }
+    }
+
+    input[type="button"] {
+        width: 100px;
+        margin: 25px 20px;
+    }
+}

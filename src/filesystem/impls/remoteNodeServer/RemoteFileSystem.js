@@ -31,7 +31,9 @@ define(function (require, exports, module) {
     var VERBOSE = false;
     var AjaxFileSystem  = require("filesystem/impls/demo/AjaxFileSystem"),
         NodeConnection  = require("utils/NodeConnection"),
-        FileUtils       = require("file/FileUtils");
+        FileUtils       = require("file/FileUtils"),
+        Dialogs         = require("widgets/Dialogs"),
+        React           = require("thirdparty/react");
 
 
     // Brackets uses FileSystem to read from various internal paths that are not in the user's project storage. We
@@ -330,8 +332,222 @@ define(function (require, exports, module) {
     }
 
     function showOpenDialog(allowMultipleSelection, chooseDirectories, title, initialPath, fileTypes, callback) {
-        // FIXME
-        throw new Error();
+
+        // TODO: Right now this only supports single open, not multiple files
+
+        var listItem = React.createFactory(React.createClass({
+            render: function() {
+                var text = this.props.item.name;
+                if (!this.props.item.isFile) {
+                    text += '/';
+                }
+
+                return React.DOM.li({
+                    onClick: this.handleClick,
+                    className: 'item ' + (this.props.item.isFile ? 'file' : 'dir')
+                }, text);
+            },
+
+            handleClick: function(e) {
+                this.props.selectItem(this.props.item);
+            }
+        }));
+
+        var list = React.createFactory(React.createClass({
+            render: function() {
+                var items = this.props.items.map(this.renderItem);
+                return React.DOM.ul({}, items);
+            },
+
+            renderItem: function(item) {
+                return listItem({
+                    item: item,
+                    selectItem: this.selectItem
+                });
+            },
+
+            selectItem: function(item) {
+                this.props.updatePath({ path: item.path, fullSet: true, instant: true });
+            }
+        }));
+
+        var pathInput = React.createFactory(React.createClass({
+
+            contextTypes: {
+                path: React.PropTypes.string.isRequired
+            },
+
+            render: function() {
+                return React.DOM.input({
+                    ref: 'path-input',
+                    type: 'text',
+                    value: this.context.path,
+                    onChange: this.handleChange,
+                    className: this.props.pathState
+                });
+            },
+
+            handleChange: function(e) {
+                this.props.updatePath({ path: this.refs['path-input'].getDOMNode().value, fullSet: true });
+            }
+        }));
+
+        var modal = React.createFactory(React.createClass({
+
+            childContextTypes: {
+                path: React.PropTypes.string
+            },
+            getChildContext: function () {
+                return {
+                    path: this.props.path
+                };
+            },
+
+            getInitialState: function () {
+                return {
+                    changeTimer: null,
+                    isUpdating: false,
+                    needsUpdate: true,
+
+                    pathState: null
+                };
+            },
+
+            render: function() {
+                if (this.state.needsUpdate) {
+                    this.state.needsUpdate = false;
+                    this.updateContents();
+                }
+
+                return React.DOM.div({}, [
+                    pathInput({
+                        updatePath: this.updatePath,
+                        pathState: this.state.pathState
+                    }),
+                    list({
+                        items: this.props.items,
+                        updatePath: this.updatePath
+                    }),
+                    React.DOM.input({
+                        type: 'button',
+                        value: 'open',
+                        'data-button-id': 'open:' + encodeURI(this.props.path),
+                        className: 'dialog-button'
+                    }),
+                    React.DOM.input({
+                        type: 'button',
+                        value: 'cancel',
+                        'data-button-id': 'cancel',
+                        className: 'dialog-button'
+                    })
+                ]);
+            },
+
+            startTimer: function() {
+                // Clear any old timer
+                if (this.state.changeTimer !== null) {
+                    window.clearTimeout(this.state.changeTimer);
+                }
+
+                var timer = window.setTimeout(this.updateContents, 750);
+                this.setState({
+                    changeTimer: timer
+                });
+            },
+
+            updatePath: function(opts) {
+                if (this.state.isUpdating) { return; }
+
+                if (opts.fullSet) {
+                    this.setProps({
+                        path: opts.path
+                    });
+                } else {
+                    var basePath = FileUtils.stripTrailingSlash(this.props.path);
+                    this.setProps({
+                        path: basePath + '/' + opts.path
+                    });
+                }
+
+                if (opts.instant) {
+                    setTimeout(this.updateContents, 0);
+                } else {
+                    this.startTimer();
+                    this.setState({ pathState: '' });
+                }
+            },
+
+            updateContents: function() {
+                if (this.state.isUpdating) { return; }
+
+                // Get the new files, lock out more updates
+                this.state.isUpdating = true;
+
+                var lookupPath = FileUtils.stripTrailingSlash(this.props.path);
+
+                stat(lookupPath, function(err, stat) {
+                    if (err) {
+                        console.error('Error while getting stat', err);
+                        this.setState({ pathState: 'error' });
+                        this.state.isUpdating = false;
+                        return;
+                    }
+
+                    this.setState({ pathState: 'loading' });
+                    if (!stat.isFile) {
+                        readdir(lookupPath, function(err, names, stats) {
+                            this.state.isUpdating = false;
+                            if (err) {
+                                console.error('Error while listing dir', err);
+                                this.setState({ pathState: 'error' });
+                                return;
+                            }
+
+                            for (var i = 0; i < stats.length; i++) {
+                                stats[i].path = lookupPath + '/' + names[i];
+                                stats[i].name = names[i];
+                            }
+
+                            // Filter the results
+                            stats = stats.filter(function(item) {
+                                return item.isFile !== chooseDirectories;
+                            });
+
+                            // Add the ".."
+                            var parentPath = FileUtils.getParentPath(lookupPath);
+                            if (parentPath.length >= 1) {
+                                stats.unshift({
+                                    path: parentPath,
+                                    name: '..',
+                                    isFile: false
+                                });
+                            }
+
+                            this.setState({ pathState: 'good' });
+                            this.setProps({ items: stats });
+                        }.bind(this));
+                    } else {
+                        this.state.isUpdating = false;
+                    }
+                }.bind(this));
+            }
+        }));
+
+        // Make a new dialog using Dialogs
+        var $template = $('<div>');
+        $template.addClass('open-file-modal-container');
+        Dialogs.showModalDialogUsingTemplate($template).done(function (res) {
+            if (res.indexOf('open:') === 0) {
+                var openPath = decodeURI(res.substring(5, res.length));
+                callback(null, [openPath]);
+            }
+        });
+
+        // Render the modal in to the dialog
+        React.render(modal({
+            path: initialPath || '/',
+            items: []
+        }), $template[0]);
     }
 
     function showSaveDialog(title, initialPath, proposedNewFilename, callback) {
