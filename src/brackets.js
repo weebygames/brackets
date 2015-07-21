@@ -265,6 +265,13 @@ define(function (require, exports, module) {
                 } else {
                     initialProjectPath = ProjectManager.getInitialProjectPath();
                 }
+
+                var initialProjectFile;
+                if (params.get("file")) {
+                    initialProjectFile = params.get("file");
+                } else {
+                    initialProjectFile = "index.html";
+                }
                 
                 ProjectManager.openProject(initialProjectPath).always(function () {
                     _initTest();
@@ -278,7 +285,7 @@ define(function (require, exports, module) {
                     if (!params.get("skipSampleProjectLoad") && !PreferencesManager.getViewState("afterFirstLaunch")) {
                         PreferencesManager.setViewState("afterFirstLaunch", "true");
                         if (ProjectManager.isWelcomeProjectPath(initialProjectPath)) {
-                            FileSystem.resolve(initialProjectPath + "index.html", function (err, file) {
+                            FileSystem.resolve(initialProjectPath + initialProjectFile, function (err, file) {
                                 if (!err) {
                                     var promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN, { fullPath: file.fullPath });
                                     promise.then(deferred.resolve, deferred.reject);
