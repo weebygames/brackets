@@ -105,7 +105,7 @@ define(function (require, exports, module) {
         if (watched) {
             options.stat = this._stat;
         }
-        
+
         this._impl.readFile(this._path, options, function (err, data, stat) {
             if (err) {
                 this._clearCachedData();

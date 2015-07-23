@@ -40,11 +40,11 @@ define(function (require, exports, module) {
      * To avoid spamming console with 404s, we hardcode a few known non-existent files
      */
     function _exists(path) {
-        if (path.match(/Theme\/main.js$/) || path.match(/\/requirejs-config.json$/) || (path.match(/\/package.json$/) && !path.match(/Theme\/package.json$/))) {
+        if (path.match(/Theme\/main.js$/) || path.match(/default\/.*?\/requirejs-config.json$/) || (path.match(/\/package.json$/) && !path.match(/Theme\/package.json$/))) {
 //            console.log("Assuming " + path + " does not exist");
             return false;
         }
-        
+
         return true;  // TODO: use $.get(HEAD) to check if it really exists?
     }
     
