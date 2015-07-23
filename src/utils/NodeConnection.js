@@ -30,6 +30,7 @@ define(function (require, exports, module) {
     "use strict";
 
     var EventDispatcher = require("utils/EventDispatcher");
+    var ensureServerSide = require("utils/ExtensionLoader").ensureServerSide;
 
     var HOST = window.location.hostname === "localhost" ? "localhost" : "brackets-" + window.location.host;
 
@@ -374,12 +375,17 @@ define(function (require, exports, module) {
         if (!Array.isArray(paths)) {
             pathArray = [paths];
         }
-        
+
         if (autoReload) {
             Array.prototype.push.apply(this._registeredModules, pathArray);
         }
 
         if (this.domains.base && this.domains.base.loadDomainModulesFromPaths) {
+            // Make sure that the paths are all server side
+            for (var i = 0; i < pathArray.length; i++) {
+                pathArray[i] = ensureServerSide(pathArray[i]);
+            }
+
             this.domains.base.loadDomainModulesFromPaths(pathArray).then(
                 function (success) { // command call succeeded
                     if (!success) {
@@ -399,10 +405,10 @@ define(function (require, exports, module) {
         } else {
             deferred.reject("this.domains.base is undefined");
         }
-        
+
         return deferred.promise();
     };
-    
+
     /**
      * @private
      * Sends a message over the WebSocket. Automatically JSON.stringifys

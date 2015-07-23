@@ -97,9 +97,13 @@ define(function (require, exports, module) {
      */
     function ensureServerSide(path) {
         if (brackets.inBrowser) {
-            // Only want to replace the path if it is at the start
+            // The extension home
             var re = new RegExp('^' + exports.getUserExtensionPath(false));
-            return path.replace(re, exports.getUserExtensionPath(true));
+            path = path.replace(re, exports.getUserExtensionPath(true));
+
+            // The brackets home
+            re = new RegExp('^\/brackets\/');
+            path = path.replace(re, global.brackets.config.brackets_home + '/');
         }
 
         return path;
@@ -158,7 +162,7 @@ define(function (require, exports, module) {
      */
     function _mergeConfig(baseConfig) {
         var deferred = new $.Deferred(),
-            extensionConfigFile = FileSystem.getFileForPath(baseConfig.baseUrl + "/requirejs-config.json");
+            extensionConfigFile = FileSystem.getFileForPath(ensureServerSide(baseConfig.baseUrl + "/requirejs-config.json"));
 
         // Optional JSON config for require.js
         FileUtils.readAsText(extensionConfigFile).done(function (text) {
