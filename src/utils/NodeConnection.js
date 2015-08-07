@@ -33,6 +33,10 @@ define(function (require, exports, module) {
     var ensureServerSide = require("utils/ExtensionLoader").ensureServerSide;
 
     var HOST = window.location.hostname === "localhost" ? "localhost" : "brackets-" + window.location.host;
+    var PROTOCOL = location.protocol;
+    var HTTPS = location.protocol === 'https:';
+    var WS_PROTOCOL = HTTPS ? 'wss:' : 'ws:';
+    var NODE_PORT = HTTPS ? 443 : 80;
 
     /**
      * Connection attempts to make before failing
@@ -88,7 +92,7 @@ define(function (require, exports, module) {
         var onNodeState = function (err, nodePort) {
             if (!err && nodePort && deferred.state() !== "rejected") {
                 port = nodePort;
-                ws = new WebSocket("ws://" + HOST + ":" + port + "/socket.io");
+                ws = new WebSocket(WS_PROTOCOL + "//" + HOST + ":" + port + "/socket.io");
 
                 // Expect ArrayBuffer objects from Node when receiving binary
                 // data instead of DOM Blobs, which are the default.
@@ -115,7 +119,7 @@ define(function (require, exports, module) {
 
 
         if (brackets.inBrowser) {
-            setTimeout(function() { onNodeState(null, 80); });
+            setTimeout(function() { onNodeState(null, NODE_PORT); });
         } else {
             brackets.app.getNodeState(onNodeState);
         }
@@ -583,7 +587,7 @@ define(function (require, exports, module) {
         if (this.connected()) {
             $.ajax({
                     dataType: "json",
-                    url: "http://" + HOST + ":" + this._port + "/api",
+                    url: PROTOCOL + "//" + HOST + ":" + this._port + "/api",
                     xhrFields: {withCredentials: true}
                 })
                 .done(refreshInterfaceCallback)
