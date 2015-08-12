@@ -873,10 +873,11 @@ define(function (require, exports, module) {
     function addMenu(name, id, position, relativeID, rightSide) {
         rightSide = rightSide || false;
         name = _.escape(name);
+        var $menubar;
         if (rightSide) {
-            var $menubar = $("#titlebar .nav.nav-right");
+            $menubar = $("#titlebar .nav.nav-right");
         } else {
-            var $menubar = $("#titlebar .nav");
+            $menubar = $("#titlebar .nav");
         }
         $menubar = $menubar.first();
         var menu;

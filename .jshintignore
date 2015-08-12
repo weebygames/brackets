@@ -3,4 +3,5 @@ src/extensions/default/brackets-trailingspaces/**
 src/extensions/default/popup-menu-extension/**
 src/extensions/default/brackets-working-file-tabs/**
 src/extensions/default/brackets-display-shortcuts/**
+src/extensions/default/brackets-extension-jsio/**
 
