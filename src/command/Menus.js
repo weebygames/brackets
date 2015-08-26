@@ -870,17 +870,11 @@ define(function (require, exports, module) {
      *
      * @return {?Menu} the newly created Menu
      */
-    function addMenu(name, id, position, relativeID, rightSide) {
-        rightSide = rightSide || false;
+    function addMenu(name, id, position, relativeID) {
         name = _.escape(name);
-        var $menubar;
-        if (rightSide) {
-            $menubar = $("#titlebar .nav.nav-right");
-        } else {
-            $menubar = $("#titlebar .nav");
-        }
-        $menubar = $menubar.first();
-        var menu;
+
+        var $menubar = $("#titlebar .nav"),
+            menu;
 
         if (!name || !id) {
             console.error("call to addMenu() is missing required parameters");
