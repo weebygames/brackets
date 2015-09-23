@@ -32,6 +32,7 @@ maxerr: 50, node: true */
         projectCache = [],
         files,
         _domainManager,
+        MAX_FILE_SIZE_TO_INDEX = 16777216, //16MB
         MAX_DISPLAY_LENGTH = 200,
         MAX_TOTAL_RESULTS = 100000, // only 100,000 search results are supported
         MAX_RESULTS_IN_A_FILE = MAX_TOTAL_RESULTS,
@@ -48,7 +49,8 @@ maxerr: 50, node: true */
         lastSearchedIndex = 0,
         crawlComplete = false,
         crawlEventSent = false,
-        collapseResults = false;
+        collapseResults = false,
+        cacheSize = 0;
     
     /**
      * Copied from StringUtils.js
@@ -186,17 +188,38 @@ maxerr: 50, node: true */
         projectCache = [];
     }
 
+
     /**
-     * Get the contents of a file given the path
+     * Gets the file size in bytes.
+     * @param   {string} fileName The name of the file to get the size
+     * @returns {Number} the file size in bytes
+     */
+    function getFilesizeInBytes(fileName) {
+        try {
+            var stats = fs.statSync(fileName);
+            return stats.size || 0;
+        } catch (ex) {
+            console.log(ex);
+            return 0;
+        }
+    }
+
+    /**
+     * Get the contents of a file from cache given the path. Also adds the file contents to cache from disk if not cached.
+     * Will not read/cache files greater than MAX_FILE_SIZE_TO_INDEX in size.
      * @param   {string} filePath full file path
-     * @returns {string} contents or null if no contents
+     * @return {string} contents or null if no contents
      */
     function getFileContentsForFile(filePath) {
         if (projectCache[filePath] || projectCache[filePath] === "") {
             return projectCache[filePath];
         }
         try {
-            projectCache[filePath] = fs.readFileSync(filePath, 'utf8');
+            if (getFilesizeInBytes(filePath) <= MAX_FILE_SIZE_TO_INDEX) {
+                projectCache[filePath] = fs.readFileSync(filePath, 'utf8');
+            } else {
+                projectCache[filePath] = "";
+            }
         } catch (ex) {
             console.log(ex);
             projectCache[filePath] = null;
@@ -324,9 +347,12 @@ maxerr: 50, node: true */
             setTimeout(fileCrawler, 1000);
             return;
         }
-        var i = 0;
-        for (i = 0; i < 10 && currentCrawlIndex < files.length; i++) {
-            getFileContentsForFile(files[currentCrawlIndex]);
+        var contents = "";
+        if (currentCrawlIndex < files.length) {
+            contents = getFileContentsForFile(files[currentCrawlIndex]);
+            if (contents) {
+                cacheSize += contents.length;
+            }
             currentCrawlIndex++;
         }
         if (currentCrawlIndex < files.length) {
@@ -336,7 +362,7 @@ maxerr: 50, node: true */
             crawlComplete = true;
             if (!crawlEventSent) {
                 crawlEventSent = true;
-                _domainManager.emitEvent("FindInFiles", "crawlComplete");
+                _domainManager.emitEvent("FindInFiles", "crawlComplete", [files.length, cacheSize]);
             }
             setTimeout(fileCrawler, 1000);
         }
@@ -350,6 +376,7 @@ maxerr: 50, node: true */
     function initCache(fileList) {
         files = fileList;
         currentCrawlIndex = 0;
+        cacheSize = 0;
         clearProjectCache();
         crawlEventSent = false;
     }
@@ -358,7 +385,7 @@ maxerr: 50, node: true */
      * Counts the number of matches matching the queryExpr in the given contents
      * @param   {String} contents  The contents to search on
      * @param   {Object} queryExpr
-     * @returns {number} number of matches
+     * @return {number} number of matches
      */
     function countNumMatches(contents, queryExpr) {
         if (!contents) {
@@ -372,7 +399,7 @@ maxerr: 50, node: true */
      * Get the total number of matches from all the files in fileList
      * @param   {array} fileList  file path array
      * @param   {Object} queryExpr
-     * @returns {Number} total number of matches
+     * @return {Number} total number of matches
      */
     function getNumMatches(fileList, queryExpr) {
         var i,
@@ -395,7 +422,7 @@ maxerr: 50, node: true */
      * Do a search with the searchObject context and return the results
      * @param   {Object}   searchObject
      * @param   {boolean} nextPages    set to true if to indicate that next page of an existing page is being fetched
-     * @returns {Object}   search results
+     * @return {Object}   search results
      */
     function doSearch(searchObject, nextPages) {
         
@@ -496,7 +523,7 @@ maxerr: 50, node: true */
 
     /**
      * Gets the next page of results of the ongoing search
-     * @returns {Object} search results
+     * @return {Object} search results
      */
     function getNextPage() {
         var send_object = {
@@ -514,7 +541,7 @@ maxerr: 50, node: true */
 
     /**
      * Gets all the results for the saved search query if present or empty search results
-     * @returns {Object} The results object
+     * @return {Object} The results object
      */
     function getAllResults() {
         var send_object = {
@@ -641,7 +668,18 @@ maxerr: 50, node: true */
         domainManager.registerEvent(
             "FindInFiles",     // domain name
             "crawlComplete",   // event name
-            []
+            [
+                {
+                    name: "numFiles",
+                    type: "number",
+                    description: "number of files cached"
+                },
+                {
+                    name: "cacheSize",
+                    type: "number",
+                    description: "The size of the file cache epressesd as string length of files"
+                }
+            ]
         );
         setTimeout(fileCrawler, 5000);
     }

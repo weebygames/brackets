@@ -1668,7 +1668,10 @@ define(function (require, exports, module) {
                     href = href.substr(0, fragment);
                 }
 
-                window.location.href = href;
+                // Defer for a more successful reload - issue #11539
+                setTimeout(function () {
+                    window.location.href = href;
+                }, 1000);
             });
         }).fail(function () {
             _isReloading = false;
