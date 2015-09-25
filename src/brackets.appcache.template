@@ -1,0 +1,18 @@
+CACHE MANIFEST
+# Built at: {{ buildTime }}
+# Git hash: {{ gitHash }}
+
+CACHE:
+{% for cache in cacheList %}
+#
+# Cache: {{ cache['name'] }}
+#
+{% for cacheUrl in cache['files'] %}
+{{ cacheUrl -}}
+{% endfor %}
+{% endfor %}
+
+
+# All other resources (e.g. sites) require the user to be online.
+NETWORK:
+*

@@ -468,6 +468,7 @@ define(function (require, exports, module) {
                     "UrlCodeHints",
                     "WebPlatformDocs",
 
+                    "AppCache",
                     "brackets-extension-jsio",
                     "brackets-jshint",
                     "brackets-trailingspaces",
