@@ -38,7 +38,10 @@
         "semver": "^4.1.0",
         "jshint": "2.1.4",
         "xmldoc": "^0.1.2",
-        "grunt-cleanempty": "1.0.3"
+        "grunt-cleanempty": "1.0.3",
+        "bluebird": "^2.10.1",
+        "glob": "^5.0.14",
+        "swig": "^1.4.2"
     },
     "scripts": {
         "postinstall": "grunt auto_install && grunt install",

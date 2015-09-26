@@ -5,14 +5,9 @@
 define(function (require, exports, module) {
     "use strict";
 
-    // var ExtensionUtils      = brackets.getModule("utils/ExtensionUtils"),
-    //     AppInit             = brackets.getModule("utils/AppInit"),
-    //     CommandManager      = brackets.getModule("command/CommandManager"),
-    //     PreferencesManager  = brackets.getModule("preferences/PreferencesManager"),
-    //     React               = brackets.getModule("thirdparty/react");
     var Dialogs                     = brackets.getModule('widgets/Dialogs'),
         DefaultDialogs              = brackets.getModule('widgets/DefaultDialogs'),
-        Strings                     = brackets.getModule("strings");
+        Strings                     = brackets.getModule('strings');
 
     var appCache = window.applicationCache;
 
