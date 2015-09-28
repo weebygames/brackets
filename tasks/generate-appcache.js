@@ -1,11 +1,10 @@
 /*jslint regexp:true*/
-/*global module, require, process*/
+/*global module, require*/
 
 module.exports = function (grunt) {
     "use strict";
 
-    var fs              = require('fs'),
-        path            = require('path');
+    var fs = require('fs');
 
     var renderTemplate = function(src, dest, data, cb) {
         var template = require('swig');
@@ -39,32 +38,32 @@ module.exports = function (grunt) {
         var glob = Promise.promisify(require('glob'));
 
         Promise.reduce(appcacheGenOptions.includes, function(results, include) {
-          var pattern = include.patternParts.length > 1 ?
-            '{' + include.patternParts.join(',') + '}' :
-            include.patternParts[0];
-          console.log('Glob:  ' + pattern);
-          return glob(pattern, appcacheGenOptions.options)
-            .then(function(files) {
-              console.log('> ' + include.name + ' files: ' + files.length);
-              results.push({
-                name: include.name,
-                files: files
-              });
-              return results;
-            });
+            var pattern = include.patternParts.length > 1 ?
+                '{' + include.patternParts.join(',') + '}' :
+                include.patternParts[0];
+            console.log('Glob:  ' + pattern);
+            return glob(pattern, appcacheGenOptions.options)
+                .then(function(files) {
+                    console.log('> ' + include.name + ' files: ' + files.length);
+                    results.push({
+                        name: include.name,
+                        files: files
+                    });
+                    return results;
+                });
         }, [])
         .then(function (results) {
-          // gen and write the template
-          renderTemplate(
-            'src/brackets.appcache.template',
-            'src/brackets.appcache',
-            {
-              buildTime: Date.now(),
-              gitHash: 'TODO',
-              cacheList: results
-            },
-            done
-          );
+            // gen and write the template
+            renderTemplate(
+                'src/brackets.appcache.template',
+                'src/brackets.appcache',
+                {
+                    buildTime: Date.now(),
+                    gitHash: 'TODO',
+                    cacheList: results
+                },
+                done
+            );
         });
     });
 
