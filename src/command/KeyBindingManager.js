@@ -1224,7 +1224,7 @@ define(function (require, exports, module) {
         }
 
         if (invalidKeys.length) {
-            errorMessage += StringUtils.format(Strings.ERROR_INVALID_SHORTCUTS, _getBulletList(invalidKeys));
+            // errorMessage += StringUtils.format(Strings.ERROR_INVALID_SHORTCUTS, _getBulletList(invalidKeys));
         }
 
         if (invalidCommands.length) {
