@@ -1,24 +1,24 @@
 /*
- * Copyright (c) 2013 Adobe Systems Incorporated. All rights reserved.
- *  
+ * Copyright (c) 2013 - present Adobe Systems Incorporated. All rights reserved.
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"), 
- * to deal in the Software without restriction, including without limitation 
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
- *  
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
- * 
+ *
  */
 
 
@@ -30,6 +30,7 @@ define(function (require, exports, module) {
     "use strict";
 
     var EventDispatcher = require("utils/EventDispatcher");
+
     var ensureServerSide = require("utils/ExtensionLoader").ensureServerSide;
 
     var HOST = window.location.hostname === "localhost" ? "localhost" : "brackets-" + window.location.host;
@@ -65,7 +66,7 @@ define(function (require, exports, module) {
      * @type  {number}
      */
     var MAX_COUNTER_VALUE = 4294967295; // 2^32 - 1
-    
+
     /**
      * @private
      * Helper function to auto-reject a deferred after a given amount of time.
@@ -78,7 +79,7 @@ define(function (require, exports, module) {
         }, delay);
         deferred.always(function () { clearTimeout(timer); });
     }
-    
+
     /**
      * @private
      * Helper function to attempt a single connection to the node server
@@ -99,15 +100,15 @@ define(function (require, exports, module) {
                 ws.binaryType = "arraybuffer";
 
                 // If the server port isn't open, we get a close event
-                // at some point in the future (and will not get an onopen 
+                // at some point in the future (and will not get an onopen
                 // event)
                 ws.onclose = function () {
                     deferred.reject("WebSocket closed");
                 };
 
                 ws.onopen = function () {
-                    // If we successfully opened, remove the old onclose 
-                    // handler (which was present to detect failure to 
+                    // If we successfully opened, remove the old onclose
+                    // handler (which was present to detect failure to
                     // connect at all).
                     ws.onclose = null;
                     deferred.resolveWith(null, [ws, port]);
@@ -126,7 +127,7 @@ define(function (require, exports, module) {
 
         return deferred.promise();
     }
-    
+
     /**
      * Provides an interface for interacting with the node server.
      * @constructor
@@ -138,7 +139,7 @@ define(function (require, exports, module) {
         this._pendingCommandDeferreds = [];
     }
     EventDispatcher.makeEventDispatcher(NodeConnection.prototype);
-    
+
     /**
      * @type {Object}
      * Exposes the domains registered with the server. This object will
@@ -152,7 +153,7 @@ define(function (require, exports, module) {
      * uses this object should not keep their own pointer to the domain property.
      */
     NodeConnection.prototype.domains = null;
-    
+
     /**
      * @private
      * @type {Array.<string>}
@@ -167,28 +168,28 @@ define(function (require, exports, module) {
      * The connection to the server
      */
     NodeConnection.prototype._ws = null;
-    
+
     /**
      * @private
      * @type {?number}
      * The port the WebSocket is currently connected to
      */
     NodeConnection.prototype._port = null;
-    
+
     /**
      * @private
      * @type {number}
      * Unique ID for commands
      */
     NodeConnection.prototype._commandCount = 1;
-    
+
     /**
      * @private
      * @type {boolean}
      * Whether to attempt reconnection if connection fails
      */
     NodeConnection.prototype._autoReconnect = false;
-    
+
     /**
      * @private
      * @type {Array.<jQuery.Deferred>}
@@ -196,7 +197,7 @@ define(function (require, exports, module) {
      * a successful refresh of the API
      */
     NodeConnection.prototype._pendingInterfaceRefreshDeferreds = null;
-    
+
     /**
      * @private
      * @type {Array.<jQuery.Deferred>}
@@ -204,7 +205,7 @@ define(function (require, exports, module) {
      * resolved/rejected with the response of commands.
      */
     NodeConnection.prototype._pendingCommandDeferreds = null;
-    
+
     /**
      * @private
      * @return {number} The next command ID to use. Always representable as an
@@ -212,16 +213,16 @@ define(function (require, exports, module) {
      */
     NodeConnection.prototype._getNextCommandID = function () {
         var nextID;
-        
+
         if (this._commandCount > MAX_COUNTER_VALUE) {
             nextID = this._commandCount = 0;
         } else {
             nextID = this._commandCount++;
         }
-        
+
         return nextID;
     };
-    
+
     /**
      * @private
      * Helper function to do cleanup work when a connection fails
@@ -230,7 +231,7 @@ define(function (require, exports, module) {
         // clear out the domains, since we may get different ones
         // on the next connection
         this.domains = {};
-        
+
         // shut down the old connection if there is one
         if (this._ws && this._ws.readyState !== WebSocket.CLOSED) {
             try {
@@ -244,17 +245,17 @@ define(function (require, exports, module) {
         });
         this._pendingInterfaceRefreshDeferreds = [];
         this._pendingCommandDeferreds = [];
-        
+
         this._ws = null;
         this._port = null;
     };
-    
+
     /**
      * Connect to the node server. After connecting, the NodeConnection
      * object will trigger a "close" event when the underlying socket
      * is closed. If the connection is set to autoReconnect, then the
      * event will also include a jQuery promise for the connection.
-     * 
+     *
      * @param {boolean} autoReconnect Whether to automatically try to
      *    reconnect to the server if the connection succeeds and then
      *    later disconnects. Note if this connection fails initially, the
@@ -290,11 +291,11 @@ define(function (require, exports, module) {
                 self._cleanup();
                 deferred.reject(err);
             }
-            
+
             self._ws = ws;
             self._port = port;
             self._ws.onmessage = self._receive.bind(self);
-            
+
             // refresh the current domains, then re-register any
             // "autoregister" modules
             self._refreshInterface().then(
@@ -311,7 +312,7 @@ define(function (require, exports, module) {
                 fail
             );
         }
-        
+
         // Repeatedly tries to connect until we succeed or until we've
         // failed CONNECTION_ATTEMPT times. After each attempt, waits
         // at least RETRY_DELAY before trying again.
@@ -335,7 +336,7 @@ define(function (require, exports, module) {
                 }
             );
         }
-        
+
         // Start the connection process
         self._cleanup();
         doConnect();
@@ -370,7 +371,7 @@ define(function (require, exports, module) {
      *    client, so it will only happen after the client reconnects.
      * @return {jQuery.Promise} Promise that resolves after the load has
      *    succeeded and the new API is availale at NodeConnection.domains,
-     *    or that rejects on failure. 
+     *    or that rejects on failure.
      */
     NodeConnection.prototype.loadDomains = function (paths, autoReload) {
         var deferred = $.Deferred();
@@ -433,7 +434,7 @@ define(function (require, exports, module) {
                     console.error("[NodeConnection] Unable to stringify message in order to send: " + stringifyError.message);
                 }
             }
-            
+
             // If we succeded in making a string, try to send it
             if (messageString) {
                 try {
@@ -457,19 +458,19 @@ define(function (require, exports, module) {
         var responseDeferred = null;
         var data = message.data;
         var m;
-        
+
         if (message.data instanceof ArrayBuffer) {
             // The first four bytes encode the command ID as an unsigned 32-bit integer
             if (data.byteLength < 4) {
                 console.error("[NodeConnection] received malformed binary message");
                 return;
             }
-            
+
             var header = data.slice(0, 4),
                 body = data.slice(4),
                 headerView = new Uint32Array(header),
                 id = headerView[0];
-            
+
             // Unpack the binary message into a commandResponse
             m = {
                 type: "commandResponse",
@@ -486,13 +487,13 @@ define(function (require, exports, module) {
                 return;
             }
         }
-        
+
         switch (m.type) {
         case "event":
             if (m.message.domain === "base" && m.message.event === "newDomains") {
                 this._refreshInterface();
             }
-            
+
             // Event type "domain:event"
             EventDispatcher.triggerWithArray(this, m.message.domain + ":" + m.message.event,
                                              m.message.parameters);
@@ -528,7 +529,7 @@ define(function (require, exports, module) {
             console.error("[NodeConnection] unknown event type: " + m.type);
         }
     };
-    
+
     /**
      * @private
      * Helper function for refreshing the interface in the "domain" property.
@@ -538,7 +539,7 @@ define(function (require, exports, module) {
     NodeConnection.prototype._refreshInterface = function () {
         var deferred = $.Deferred();
         var self = this;
-        
+
         var pendingDeferreds = this._pendingInterfaceRefreshDeferreds;
         this._pendingInterfaceRefreshDeferreds = [];
         deferred.then(
@@ -549,7 +550,7 @@ define(function (require, exports, module) {
                 pendingDeferreds.forEach(function (d) { d.reject(err); });
             }
         );
-        
+
         function refreshInterfaceCallback(spec) {
             function makeCommandFunction(domainName, commandSpec) {
                 return function () {
@@ -565,7 +566,7 @@ define(function (require, exports, module) {
                     return deferred;
                 };
             }
-            
+
             // TODO: Don't replace the domain object every time. Instead, merge.
             self.domains = {};
             self.domainEvents = {};
@@ -583,7 +584,7 @@ define(function (require, exports, module) {
             });
             deferred.resolve();
         }
-        
+
         if (this.connected()) {
             $.ajax({
                     dataType: "json",
@@ -595,10 +596,10 @@ define(function (require, exports, module) {
         } else {
             deferred.reject("Attempted to call _refreshInterface when not connected.");
         }
-        
+
         return deferred.promise();
     };
-    
+
     /**
      * @private
      * Get the default timeout value
@@ -607,7 +608,7 @@ define(function (require, exports, module) {
     NodeConnection._getConnectionTimeout = function () {
         return CONNECTION_TIMEOUT;
     };
-    
+
     module.exports = NodeConnection;
-    
+
 });
